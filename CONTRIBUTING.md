@@ -23,18 +23,10 @@ git pull --rebase
 git push
 ```
 
-## Use a branch for anything non-trivial
+## Push straight to `main`
 
-A one-line edit on `main` is fine. For anything bigger, work on a branch and
-open a PR so someone can look at it:
-
-```bash
-git switch -c your-branch-name
-# ... commit your work ...
-git push -u origin your-branch-name
-```
-
-Then open the PR from GitHub.
+Everyone commits and pushes directly to `main`; no branches or PRs needed.
+Keep commits small and push often so others pick up your changes quickly.
 
 ## If you cloned while the repo was empty
 
