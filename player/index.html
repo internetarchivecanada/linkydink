@@ -6,17 +6,29 @@
   <title>Live Music Archive seedlist</title>
   <script src="../nav.js" defer></script>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; color: #222; }
+    /* same palette as the seedlist builder */
+    :root {
+      --bg: #f4f4f1; --panel: #fff; --ink: #1d2230; --muted: #626a78; --line: #dcdcd6;
+      --blue: #3556a0; --hover: #ececE6; --playing: #e3eafb;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #12151c; --panel: #1a1e27; --ink: #e6e8ee; --muted: #9aa1ae; --line: #2c3240; --blue: #7d9be0; --hover: #252b38; --playing: #24304a; color-scheme: dark; }
+    }
+    html { background: var(--bg); }
+    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; color: var(--ink); background: var(--bg); }
     h1 { font-size: 1.4rem; margin-bottom: .25rem; }
-    .sub { color: #666; margin-top: 0; }
+    .sub { color: var(--muted); margin-top: 0; }
+    a { color: var(--blue); }
     audio { width: 100%; margin: 1rem 0; }
     .controls { display: flex; gap: .5rem; }
-    button { font: inherit; padding: .4rem .9rem; cursor: pointer; }
+    button { font: inherit; padding: .4rem .9rem; cursor: pointer; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+    button:hover { border-color: var(--muted); }
     ol { padding-left: 1.5rem; }
     li { padding: .5rem; border-radius: 6px; cursor: pointer; }
-    li:hover { background: #f2f2f2; }
-    li.playing { background: #e6efff; font-weight: 600; }
-    .meta { display: block; font-weight: normal; color: #666; font-size: .9rem; }
+    li:hover { background: var(--hover); }
+    li.playing { background: var(--playing); font-weight: 600; }
+    .meta { display: block; font-weight: normal; color: var(--muted); font-size: .9rem; }
     .meta a { color: inherit; }
   </style>
 </head>
