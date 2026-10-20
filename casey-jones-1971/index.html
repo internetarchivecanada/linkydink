@@ -21,6 +21,7 @@
   --rail: #3c4a42;
   --signal: #b3321f;
   --signal-soft: rgba(179, 50, 31, 0.16);
+  --lamp: #e0a526;
   --font-display: "Rye", "Rockwell", Georgia, serif;
   --font-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --font-data: "IBM Plex Mono", ui-monospace, Menlo, monospace;
@@ -28,15 +29,16 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #131715; --land: #212824; --border: #36403a; --ink: #e5e9e3; --muted: #97a39b;
-    --rail: #8b9c92; --signal: #f0694b; --signal-soft: rgba(240, 105, 75, 0.2); color-scheme: dark;
+    --rail: #8b9c92; --signal: #f0694b; --signal-soft: rgba(240, 105, 75, 0.2); --lamp: #f2c14e; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #131715; --land: #212824; --border: #36403a; --ink: #e5e9e3; --muted: #97a39b;
-  --rail: #8b9c92; --signal: #f0694b; --signal-soft: rgba(240, 105, 75, 0.2); color-scheme: dark;
+  --rail: #8b9c92; --signal: #f0694b; --signal-soft: rgba(240, 105, 75, 0.2); --lamp: #f2c14e; color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
   background: var(--bg);
   color: var(--ink);
@@ -46,7 +48,35 @@ body {
 }
 .wrap { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
 
-header { display: flex; flex-direction: column; gap: 6px; }
+header { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 10px 28px; align-items: end; }
+header .text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.loco { display: block; width: 100%; max-width: 420px; height: auto; justify-self: end; }
+.loco .body { fill: var(--ink); }
+.loco .boiler { fill: var(--rail); }
+.loco .trim { fill: var(--signal); }
+.loco .cut { fill: var(--bg); }
+.loco .lamp { fill: var(--lamp); }
+.loco .rail { stroke: var(--rail); stroke-width: 3; }
+.loco .tie { fill: var(--border); }
+.loco .wheel { fill: var(--bg); stroke: var(--ink); stroke-width: 4; }
+.loco .spokes line { stroke: var(--ink); stroke-width: 2; }
+.loco .hub { fill: var(--ink); }
+.loco .num { font: 600 11px var(--font-data); fill: var(--bg); letter-spacing: 0.05em; }
+.loco .steam circle { fill: var(--muted); opacity: 0; transform-box: fill-box; transform-origin: center; animation: puff 2.6s ease-out infinite; }
+.loco .steam circle:nth-child(2) { animation-delay: 0.85s; }
+.loco .steam circle:nth-child(3) { animation-delay: 1.7s; }
+.loco .spokes { transform-box: fill-box; transform-origin: center; animation: spin 1.2s linear infinite; animation-play-state: paused; }
+.loco .rod { animation: crank 1.2s linear infinite; animation-play-state: paused; }
+body.rolling .loco .spokes, body.rolling .loco .rod { animation-play-state: running; }
+body.rolling .loco .steam circle { animation-duration: 1.3s; }
+@keyframes puff { 0% { opacity: 0.55; transform: translate(0, 0) scale(0.6); } 100% { opacity: 0; transform: translate(-52px, -12px) scale(1.9); } }
+@keyframes spin { to { transform: rotate(-360deg); } }
+@keyframes crank { 0% { transform: translate(0, -9px); } 25% { transform: translate(9px, 0); } 50% { transform: translate(0, 9px); } 75% { transform: translate(-9px, 0); } 100% { transform: translate(0, -9px); } }
+@media (max-width: 760px) { header { grid-template-columns: minmax(0, 1fr); } .loco { justify-self: start; max-width: 340px; } }
+@media (prefers-reduced-motion: reduce) { .loco .steam circle, .loco .spokes, .loco .rod { animation: none !important; } .loco .steam circle { opacity: 0.35; } }
+.train .t-body { fill: var(--ink); stroke: var(--bg); stroke-width: 1; }
+.train .t-trim { fill: var(--signal); }
+.train { pointer-events: none; }
 .eyebrow { font: 500 12px/1 var(--font-data); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 h1 { font: 400 clamp(34px, 6vw, 56px)/1.05 var(--font-display); margin: 0; text-wrap: balance; }
 .lede { margin: 4px 0 0; max-width: 62ch; color: var(--muted); }
@@ -144,10 +174,57 @@ tbody tr.playing td.date::before { content: "♪ "; color: var(--signal); }
 
 <div class="wrap">
   <header>
+    <div class="text">
     <div class="eyebrow">Grateful Dead · Internet Archive · 1971</div>
     <h1>Casey Jones, 1971</h1>
     <p class="lede">Every 1971 date in the Archive's <strong>Grateful Dead</strong> collection with a recording that has "Casey Jones" in its track list. 1971 is the year with the most of them.</p>
     <ul class="facts" id="facts"></ul>
+    </div>
+    <svg class="loco" viewBox="0 0 420 196" role="img" aria-label="Illustration of Casey Jones in the cab of steam engine No. 382, leaning out the window">
+      <g class="steam"><circle cx="336" cy="30" r="9"/><circle cx="336" cy="30" r="9"/><circle cx="336" cy="30" r="9"/></g>
+      <g class="ties"><rect class="tie" x="4" y="178" width="10" height="6" rx="1"/><rect class="tie" x="24" y="178" width="10" height="6" rx="1"/><rect class="tie" x="44" y="178" width="10" height="6" rx="1"/><rect class="tie" x="64" y="178" width="10" height="6" rx="1"/><rect class="tie" x="84" y="178" width="10" height="6" rx="1"/><rect class="tie" x="104" y="178" width="10" height="6" rx="1"/><rect class="tie" x="124" y="178" width="10" height="6" rx="1"/><rect class="tie" x="144" y="178" width="10" height="6" rx="1"/><rect class="tie" x="164" y="178" width="10" height="6" rx="1"/><rect class="tie" x="184" y="178" width="10" height="6" rx="1"/><rect class="tie" x="204" y="178" width="10" height="6" rx="1"/><rect class="tie" x="224" y="178" width="10" height="6" rx="1"/><rect class="tie" x="244" y="178" width="10" height="6" rx="1"/><rect class="tie" x="264" y="178" width="10" height="6" rx="1"/><rect class="tie" x="284" y="178" width="10" height="6" rx="1"/><rect class="tie" x="304" y="178" width="10" height="6" rx="1"/><rect class="tie" x="324" y="178" width="10" height="6" rx="1"/><rect class="tie" x="344" y="178" width="10" height="6" rx="1"/><rect class="tie" x="364" y="178" width="10" height="6" rx="1"/><rect class="tie" x="384" y="178" width="10" height="6" rx="1"/><rect class="tie" x="404" y="178" width="10" height="6" rx="1"/></g>
+      <line class="rail" x1="0" y1="177" x2="420" y2="177"/>
+      <!-- tender -->
+      <path class="body" d="M8 104 H88 V160 H8 Z"/>
+      <path class="body" d="M14 104 Q30 86 48 96 Q64 84 82 104 Z"/>
+      <rect class="trim" x="8" y="122" width="80" height="4"/>
+      <rect class="body" x="86" y="148" width="14" height="5"/>
+      <!-- cab -->
+      <rect class="body" x="96" y="62" width="76" height="98"/>
+      <rect class="body" x="88" y="53" width="90" height="10" rx="3"/>
+      <rect class="cut" x="108" y="76" width="44" height="38" rx="4"/>
+      <rect class="trim" x="96" y="122" width="76" height="4"/>
+      <text class="num" x="134" y="146" text-anchor="middle">382</text>
+      <!-- Casey: engineer's cap, red neckerchief, arm out the window -->
+      <circle class="body" cx="132" cy="98" r="9"/>
+      <path class="body" d="M121 92 Q121 82 132 82 Q143 82 143 92 Z"/>
+      <rect class="body" x="140" y="89" width="9" height="3" rx="1.5"/>
+      <path class="cut" d="M125 86 H139 M124 89 H141" stroke="var(--bg)" stroke-width="1" fill="none"/>
+      <path class="trim" d="M124 106 L140 106 L132 114 Z"/>
+      <rect class="body" x="128" y="106" width="34" height="7" rx="3.5"/>
+      <circle class="body" cx="162" cy="109" r="4.5"/>
+      <!-- boiler -->
+      <rect class="boiler" x="170" y="90" width="166" height="54" rx="6"/>
+      <path class="cut" d="M212 90 V144 M262 90 V144 M308 90 V144" stroke="var(--bg)" stroke-width="2" fill="none" opacity="0.5"/>
+      <path class="body" d="M236 92 Q236 72 250 72 Q264 72 264 92 Z"/>
+      <path class="body" d="M286 92 Q286 80 296 80 Q306 80 306 92 Z"/>
+      <rect class="body" x="330" y="84" width="28" height="62" rx="3"/>
+      <path class="body" d="M334 86 L337 58 L322 42 L356 42 L341 58 L344 86 Z"/>
+      <rect class="body" x="318" y="36" width="42" height="7" rx="2"/>
+      <rect class="body" x="356" y="66" width="22" height="22" rx="2"/>
+      <circle class="lamp" cx="374" cy="77" r="6"/>
+      <rect class="body" x="168" y="144" width="192" height="5"/>
+      <!-- cowcatcher -->
+      <path class="trim" d="M356 148 H382 L406 176 H356 Z"/>
+      <path class="cut" d="M366 150 L372 176 M376 150 L386 176 M386 156 L396 176" stroke="var(--bg)" stroke-width="2" fill="none"/>
+      <!-- wheels -->
+      <circle class="wheel" cx="22" cy="166" r="10"/><circle class="hub" cx="22" cy="166" r="3"/>
+      <circle class="wheel" cx="74" cy="166" r="10"/><circle class="hub" cx="74" cy="166" r="3"/>
+      <circle class="wheel" cx="210" cy="151" r="25"/><g class="spokes"><line x1="210" y1="151" x2="233.0" y2="151.0"/><line x1="210" y1="151" x2="226.3" y2="167.3"/><line x1="210" y1="151" x2="210.0" y2="174.0"/><line x1="210" y1="151" x2="193.7" y2="167.3"/><line x1="210" y1="151" x2="187.0" y2="151.0"/><line x1="210" y1="151" x2="193.7" y2="134.7"/><line x1="210" y1="151" x2="210.0" y2="128.0"/><line x1="210" y1="151" x2="226.3" y2="134.7"/><circle cx="210" cy="151" r="23" fill="none" stroke="none"/></g><circle class="hub" cx="210" cy="151" r="5"/>
+      <circle class="wheel" cx="272" cy="151" r="25"/><g class="spokes"><line x1="272" y1="151" x2="295.0" y2="151.0"/><line x1="272" y1="151" x2="288.3" y2="167.3"/><line x1="272" y1="151" x2="272.0" y2="174.0"/><line x1="272" y1="151" x2="255.7" y2="167.3"/><line x1="272" y1="151" x2="249.0" y2="151.0"/><line x1="272" y1="151" x2="255.7" y2="134.7"/><line x1="272" y1="151" x2="272.0" y2="128.0"/><line x1="272" y1="151" x2="288.3" y2="134.7"/><circle cx="272" cy="151" r="23" fill="none" stroke="none"/></g><circle class="hub" cx="272" cy="151" r="5"/>
+      <circle class="wheel" cx="338" cy="164" r="12"/><circle class="hub" cx="338" cy="164" r="3"/>
+      <g class="rod"><rect class="trim" x="206" y="148" width="70" height="6" rx="3"/></g>
+    </svg>
   </header>
 
   <section class="board" aria-label="Map of the 1971 shows">
@@ -270,6 +347,23 @@ tbody tr.playing td.date::before { content: "♪ "; color: var(--signal); }
     .attr("dy", "0.35em")
     .text((s) => `${s.city} ×${s.list.length}`);
 
+  // A little engine that rides the route to whichever show is selected.
+  const train = svg.append("g").attr("class", "train");
+  const loco = train.append("g").attr("transform", "translate(0,-15)");
+  loco.append("rect").attr("class", "t-body").attr("x", -13).attr("y", -11).attr("width", 8).attr("height", 13).attr("rx", 1);
+  loco.append("rect").attr("class", "t-body").attr("x", -6).attr("y", -6).attr("width", 17).attr("height", 8).attr("rx", 2);
+  loco.append("rect").attr("class", "t-body").attr("x", 6).attr("y", -12).attr("width", 4).attr("height", 7);
+  loco.append("path").attr("class", "t-trim").attr("d", "M11 2 L11 -2 L15 2 Z");
+  for (const x of [-9, -1, 7]) loco.append("circle").attr("class", "t-body").attr("cx", x).attr("cy", 4).attr("r", 2.6);
+  let trainAt = shows[shows.length - 1], trainDir = -1;
+  train.attr("transform", `translate(${trainAt.x},${trainAt.y}) scale(${trainDir},1)`);
+  function moveTrain(s, quick) {
+    if (s.x !== trainAt.x) trainDir = s.x < trainAt.x ? -1 : 1;
+    trainAt = s;
+    train.interrupt().transition().duration(reduced ? 0 : quick ? 220 : 500).ease(d3.easeCubicInOut)
+      .attr("transform", `translate(${s.x},${s.y}) scale(${trainDir},1)`);
+  }
+
   const tip = document.getElementById("tip");
   const fmt = (d) => new Date(d + "T12:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
   function showTip(e, s) {
@@ -321,6 +415,7 @@ tbody tr.playing td.date::before { content: "♪ "; color: var(--signal); }
     const s = shows[i];
     scrub.value = i;
     drawRoute(i);
+    moveTrain(s, !!timer);
     const visited = new Set(shows.slice(0, i + 1).map((x) => x.key));
     stopSel.classed("on", (st) => st.key === s.key).classed("dim", (st) => !visited.has(st.key));
     rowEls.forEach((tr) => tr.classList.toggle("on", +tr.dataset.i === i));
@@ -330,11 +425,13 @@ tbody tr.playing td.date::before { content: "♪ "; color: var(--signal); }
 
   let timer = null;
   const playBtn = document.getElementById("play");
-  function stop() { if (timer) { clearInterval(timer); timer = null; playBtn.textContent = "Play the year"; } }
+  function stop() { if (timer) { clearInterval(timer); timer = null; playBtn.textContent = "Play the year"; } setRolling(); }
+  function setRolling() { const a = document.getElementById("audio"); document.body.classList.toggle("rolling", !!timer || (a && !a.paused && !a.ended)); }
   playBtn.addEventListener("click", () => {
     if (timer) return stop();
     if (current >= shows.length - 1) current = -1;
     playBtn.textContent = "Pause";
+    document.body.classList.add("rolling");
     timer = setInterval(() => {
       if (current >= shows.length - 1) return stop();
       select(current + 1, false);
@@ -377,6 +474,7 @@ tbody tr.playing td.date::before { content: "♪ "; color: var(--signal); }
     });
     document.getElementById("prev").addEventListener("click", () => playTrack(Math.max(0, playing - 1)));
     document.getElementById("next").addEventListener("click", () => playTrack(playing + 1));
+    for (const ev of ["play", "pause", "ended"]) audio.addEventListener(ev, setRolling);
     audio.addEventListener("ended", () => { if (auto.checked && playing < shows.length - 1) playTrack(playing + 1); });
     audio.addEventListener("error", () => {
       if (!audio.getAttribute("src")) return;
