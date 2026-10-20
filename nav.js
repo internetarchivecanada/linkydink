@@ -11,6 +11,7 @@
     ["seedlist-builder", "Seedlist builder"],
     ["player", "Player"],
     ["gd-player", "Grateful Dead shows map"],
+    ["aadam-jacobs", "Aadam Jacobs Collection"],
   ];
   const parts = location.pathname.split("/").filter(Boolean);
   const here = parts.at(-1) === "index.html" ? parts.at(-2) : parts.at(-1);

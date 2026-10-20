@@ -1,0 +1,296 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aadam Jacobs Collection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<script src="../nav.js" defer></script>
+<style>
+/* A taper's index: 3,570 Chicago-area shows, by who played and by when. */
+:root {
+  --bg: #f2f3f6;
+  --panel: #ffffff;
+  --ink: #1a2230;
+  --muted: #5d6676;
+  --line: #d5d9e1;
+  --border: #b9bfcb;
+  --red: #c4302b;
+  --blue: #3556a0;
+  --chip: #e6e9ef;
+  --font-display: "Gloock", Georgia, serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11151d; --panel: #181d27; --ink: #e5e8ef; --muted: #98a1b2; --line: #2b3240;
+    --border: #3a4253; --red: #ef615b; --blue: #7d9be0; --chip: #232a37;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11151d; --panel: #181d27; --ink: #e5e8ef; --muted: #98a1b2; --line: #2b3240;
+  --border: #3a4253; --red: #ef615b; --blue: #7d9be0; --chip: #232a37;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 64px;
+}
+.wrap { max-width: 1000px; margin: 0 auto; display: grid; gap: 18px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(34px, 6.5vw, 58px); line-height: 1; margin: 6px 0 0; }
+h1 span { color: var(--red); }
+.stats { display: flex; flex-wrap: wrap; gap: 4px 20px; font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: 8px; }
+.stats b { color: var(--ink); font-weight: 500; }
+.stats a { color: var(--blue); }
+
+/* controls */
+.bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; position: sticky; top: 0; z-index: 10;
+       background: var(--bg); padding: 10px 0; border-bottom: 1px solid var(--line); }
+.seg { display: flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; flex: none; }
+.seg button { font: 500 13px var(--font-mono); background: none; border: 0; color: var(--ink); padding: 6px 14px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+input[type="search"] {
+  flex: 1 1 200px; min-width: 0; font: 15px var(--font-body); color: var(--ink);
+  background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 7px 11px;
+}
+input[type="search"]:focus-visible, .seg button:focus-visible, summary:focus-visible, .chip:focus-visible, a:focus-visible, .who:focus-visible, select:focus-visible {
+  outline: 2px solid var(--blue); outline-offset: 2px;
+}
+select { font: 13px var(--font-mono); color: var(--ink); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 7px 9px; }
+.count { font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; margin-left: auto; }
+
+/* year chips */
+.years { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { font: 500 12px var(--font-mono); background: var(--chip); border: 1px solid transparent; color: var(--ink);
+        border-radius: 999px; padding: 4px 9px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+
+/* lists */
+.list { display: grid; }
+.gh { font: 500 12px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--red);
+      padding: 16px 0 5px; border-bottom: 1px solid var(--line); position: sticky; top: 57px; background: var(--bg); z-index: 5; }
+
+/* Only rows BELOW the fold get content-visibility: the guidance is explicit that
+   applying it to above-the-fold content delays the critical first render. */
+.defer { content-visibility: auto; contain-intrinsic-size: auto none auto 43px; }
+
+details { border-bottom: 1px solid var(--line); }
+summary {
+  display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: baseline;
+  padding: 8px 2px; cursor: pointer; list-style: none;
+}
+summary::-webkit-details-marker { display: none; }
+summary:hover { background: var(--chip); }
+details[open] > summary { background: var(--chip); }
+summary .nm { font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
+summary .nm::before { content: "▸ "; color: var(--muted); }
+details[open] > summary .nm::before { content: "▾ "; color: var(--red); }
+summary .ct { font-family: var(--font-mono); font-size: 12px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.detail { padding: 2px 0 10px 14px; border-left: 2px solid var(--red); margin-left: 2px; }
+.srow { display: grid; grid-template-columns: 92px 1fr auto; gap: 10px; align-items: baseline; padding: 5px 0; font-size: 14px; }
+.srow + .srow { border-top: 1px dashed var(--line); }
+.chrono .srow { border-bottom: 1px solid var(--line); padding: 8px 2px; }
+.srow .dt { font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.srow .vn { min-width: 0; overflow-wrap: anywhere; }
+.srow a { font: 12px var(--font-mono); color: var(--blue); text-decoration: none; white-space: nowrap; }
+.srow a:hover { text-decoration: underline; }
+.who { background: none; border: 0; padding: 0; font: inherit; font-weight: 500; color: var(--blue); cursor: pointer; text-align: left; }
+.who:hover { text-decoration: underline; }
+.unk { color: var(--muted); font-style: italic; }
+.empty { padding: 36px 2px; color: var(--muted); font-family: var(--font-mono); font-size: 13px; }
+footer { font-family: var(--font-mono); font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
+footer a { color: var(--blue); }
+@media (max-width: 560px) {
+  .srow { grid-template-columns: 82px 1fr; }
+  .srow a { grid-column: 2; }
+  .gh { top: 96px; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Internet Archive · Live Music Archive</div>
+    <h1>Aadam Jacobs <span>Collection</span></h1>
+    <div class="stats" id="stats"><span>Loading…</span></div>
+  </header>
+
+  <div class="bar">
+    <div class="seg" role="group" aria-label="View">
+      <button id="vPerf" aria-pressed="true">Performers</button>
+      <button id="vDate" aria-pressed="false">Chronology</button>
+    </div>
+    <input type="search" id="q" placeholder="Search performer or venue…" aria-label="Search performer or venue">
+    <select id="sort" aria-label="Sort performers">
+      <option value="az">A–Z</option>
+      <option value="count">Most shows</option>
+      <option value="recent">Most recent</option>
+    </select>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="years" id="years" role="group" aria-label="Filter by year"></div>
+
+  <div class="list" id="list"><div class="empty">Loading shows…</div></div>
+
+  <footer>
+    Data from the <a href="https://archive.org/details/aadamjacobs">Aadam Jacobs Collection</a>
+    at the Internet Archive's <a href="https://archive.org/details/etree">Live Music Archive</a>.
+    Nothing is hosted here — every recording streams from archive.org.
+    Venue is recovered from item titles where the <code>venue</code> field is absent.
+    <span id="gen"></span>
+  </footer>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const listEl = $('#list'), countEl = $('#count'), yearsEl = $('#years');
+// Rows above this index render eagerly; past it they get content-visibility.
+const FOLD = 20;
+let DATA = null, PERF = [], view = 'perf', query = '', sortBy = 'az', year = null;
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const iaUrl = id => `https://archive.org/details/${encodeURIComponent(id)}`;
+
+fetch('shows.json')
+  .then(r => { if (!r.ok) throw new Error(`shows.json: HTTP ${r.status}`); return r.json(); })
+  .then(d => { DATA = d; init(); })
+  .catch(err => {
+    listEl.innerHTML = `<div class="empty">Could not load shows.json — ${esc(err.message)}.<br>` +
+      `Serve this folder over HTTP (<code>python3 -m http.server 8000</code>) rather than opening the file directly.</div>`;
+  });
+
+function init() {
+  PERF = DATA.performers.map((name, i) => ({ i, name, key: name.toLowerCase(), shows: [] }));
+  for (const s of DATA.shows) PERF[s[0]].shows.push(s);   // shows.json is already date-sorted
+  for (const p of PERF) {
+    p.n = p.shows.length;
+    p.first = p.shows[0][1].slice(0, 4);
+    p.last = p.shows[p.n - 1][1].slice(0, 4);
+  }
+
+  const yrs = [...new Set(DATA.shows.map(s => s[1].slice(0, 4)))].sort();
+  $('#stats').innerHTML =
+    `<span><b>${DATA.shows.length.toLocaleString()}</b> shows</span>` +
+    `<span><b>${PERF.length.toLocaleString()}</b> performers</span>` +
+    `<span><b>${DATA.venues.length}</b> venues</span>` +
+    `<span><b>${yrs[0]}–${yrs.at(-1)}</b></span>` +
+    `<span><a href="${DATA.source}">on archive.org</a></span>`;
+  $('#gen').textContent = DATA.generated ? `Indexed ${DATA.generated}.` : '';
+
+  yearsEl.innerHTML = yrs.map(y => `<button class="chip" data-y="${y}" aria-pressed="false">${y}</button>`).join('');
+  yearsEl.addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    year = (year === b.dataset.y) ? null : b.dataset.y;
+    for (const c of yearsEl.children) c.setAttribute('aria-pressed', String(c.dataset.y === year));
+    render();
+  });
+
+  let t;
+  $('#q').addEventListener('input', e => {
+    clearTimeout(t);
+    t = setTimeout(() => { query = e.target.value.trim().toLowerCase(); render(); }, 120);
+  });
+  $('#sort').addEventListener('change', e => { sortBy = e.target.value; render(); });
+  $('#vPerf').addEventListener('click', () => setView('perf'));
+  $('#vDate').addEventListener('click', () => setView('date'));
+
+  // Jump from a chronology row to that performer's entry.
+  listEl.addEventListener('click', e => {
+    const who = e.target.closest('.who'); if (!who) return;
+    const p = +who.dataset.p;
+    $('#q').value = ''; query = '';
+    setView('perf');
+    const el = listEl.querySelector(`details[data-p="${p}"]`);
+    if (el) { el.open = true; el.scrollIntoView({ block: 'center' }); }
+  });
+
+  render();
+}
+
+function setView(v) {
+  view = v;
+  $('#vPerf').setAttribute('aria-pressed', String(v === 'perf'));
+  $('#vDate').setAttribute('aria-pressed', String(v === 'date'));
+  const sel = $('#sort');
+  sel.disabled = (v !== 'perf');
+  sel.style.opacity = (v === 'perf') ? 1 : .45;
+  render();
+}
+
+const venueOf = s => s[2] >= 0 ? DATA.venues[s[2]] : '';
+const matchShow = s =>
+  (!year || s[1].startsWith(year)) &&
+  (!query || PERF[s[0]].key.includes(query) || venueOf(s).toLowerCase().includes(query));
+
+function render() { view === 'perf' ? renderPerformers() : renderChronology(); }
+
+function showRow(s, withWho) {
+  const v = venueOf(s);
+  return `<div class="srow">` +
+    `<span class="dt">${s[1]}</span>` +
+    `<span class="vn">${withWho ? `<button class="who" data-p="${s[0]}">${esc(DATA.performers[s[0]])}</button> · ` : ''}` +
+      `${v ? esc(v) : '<span class="unk">venue unknown</span>'}</span>` +
+    `<a href="${iaUrl(s[3])}" target="_blank" rel="noopener">listen ↗</a>` +
+  `</div>`;
+}
+
+function renderPerformers() {
+  let rows = [];
+  for (const p of PERF) {
+    const shows = p.shows.filter(matchShow);
+    if (shows.length) rows.push({ p, shows });
+  }
+  if (sortBy === 'az') rows.sort((a, b) => a.p.key.localeCompare(b.p.key));
+  else if (sortBy === 'count') rows.sort((a, b) => b.shows.length - a.shows.length || a.p.key.localeCompare(b.p.key));
+  else rows.sort((a, b) => b.shows.at(-1)[1].localeCompare(a.shows.at(-1)[1]));
+
+  const total = rows.reduce((n, r) => n + r.shows.length, 0);
+  countEl.textContent = `${rows.length.toLocaleString()} performers · ${total.toLocaleString()} shows`;
+  if (!rows.length) { listEl.innerHTML = `<div class="empty">No performers match.</div>`; return; }
+
+  const out = [];
+  let letter = null, i = 0;
+  for (const { p, shows } of rows) {
+    if (sortBy === 'az') {
+      const L = /[a-z]/.test(p.key[0]) ? p.key[0].toUpperCase() : '#';
+      if (L !== letter) { letter = L; out.push(`<div class="gh">${L}</div>`); }
+    }
+    const span = p.last !== p.first ? `${p.first}–${p.last}` : p.first;
+    // name="perf" makes these an exclusive accordion natively — one open at a time.
+    out.push(
+      `<details data-p="${p.i}" name="perf"${i++ >= FOLD ? ' class="defer"' : ''}>` +
+        `<summary><span class="nm">${esc(p.name)}</span>` +
+        `<span class="ct">${shows.length} show${shows.length > 1 ? 's' : ''} · ${span}</span></summary>` +
+        `<div class="detail">${shows.map(s => showRow(s, false)).join('')}</div>` +
+      `</details>`);
+  }
+  listEl.className = 'list';
+  listEl.innerHTML = out.join('');
+}
+
+function renderChronology() {
+  const shows = DATA.shows.filter(matchShow);
+  countEl.textContent = `${shows.length.toLocaleString()} shows`;
+  if (!shows.length) { listEl.innerHTML = `<div class="empty">No shows match.</div>`; return; }
+
+  const out = [];
+  let y = null, i = 0;
+  for (const s of shows) {
+    const sy = s[1].slice(0, 4);
+    if (sy !== y) { y = sy; out.push(`<div class="gh">${y}</div>`); }
+    out.push(i++ >= FOLD
+      ? showRow(s, true).replace('class="srow"', 'class="srow defer"')
+      : showRow(s, true));
+  }
+  listEl.className = 'list chrono';
+  listEl.innerHTML = out.join('');
+}
+</script>

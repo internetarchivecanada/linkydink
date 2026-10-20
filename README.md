@@ -51,6 +51,7 @@ Everything on `main` is published with GitHub Pages; each folder is its own page
 - [Grateful Dead 1971 map](https://internetarchivecanada.github.io/linkydink/gd1971-map/): 81 show dates across 44 cities, one recording per date. Click a city or a date to play the show, starting at Casey Jones when it was played.
 - [Seedlist builder](https://internetarchivecanada.github.io/linkydink/seedlist-builder/): pick songs from the 1971 shows on a map, put them in order, and save them as `seedlist.json` or play them in the player.
 - [Player](https://internetarchivecanada.github.io/linkydink/player/): plays a seedlist. On its own, it plays five songs by five different bands from across the Live Music Archive.
+- [Aadam Jacobs Collection](https://internetarchivecanada.github.io/linkydink/aadam-jacobs/): all 3,570 shows one taper recorded around Chicago between 1984 and 2023, indexed by its 1,886 performers and browsable as a chronology.
 
 Every page shares a menu bar from [nav.js](nav.js); add new pages to its list.
 
@@ -64,6 +65,7 @@ Pushes to `main` show up here within a minute or so.
 | `gd1971-map/` | One entry per date, with the recording to play and its Casey Jones track | The recording's track list and MP3s |
 | `seedlist-builder/` | `shows.json`, a copy of the `gd1971-map` data | Track lists and MP3s for the shows you open |
 | `player/` | `seedlist.json`: title, artist, date, venue, archive.org identifier and file for each song | The MP3s |
+| `aadam-jacobs/` | `shows.json`: every show in the [Aadam Jacobs Collection](https://archive.org/details/aadamjacobs) as performer, date, venue and identifier, with performers and venues held in shared lists | Nothing at runtime; each row links out to its archive.org page |
 
 A seedlist is plain JSON. Each track names an archive.org `identifier` and a
 `file`, so `https://archive.org/download/<identifier>/<file>` plays it. The
