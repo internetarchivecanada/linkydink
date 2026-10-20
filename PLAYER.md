@@ -10,3 +10,7 @@ add a slider beneath the date range with a left arrow and a right arrow, and in 
 the currently chosen date/city is highlighted on the map with a bright orange circle
 
 that concert's playlist is shown in the concert (player) area
+
+## Song filter
+
+a dropdown listing all songs found for the artist; picking one filters the city/date list, the map and the stepper to shows with that song, and playback starts at that song
