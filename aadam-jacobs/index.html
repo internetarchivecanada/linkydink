@@ -71,6 +71,8 @@ select { font: 13px var(--font-mono); color: var(--ink); background: var(--panel
 .chip { font: 500 12px var(--font-mono); background: var(--chip); border: 1px solid transparent; color: var(--ink);
         border-radius: 999px; padding: 4px 9px; cursor: pointer; font-variant-numeric: tabular-nums; }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.chip.clear { background: none; border-color: var(--border); color: var(--muted); }
+.chip.clear:hover { color: var(--ink); border-color: var(--ink); }
 
 /* lists */
 .list { display: grid; }
@@ -125,10 +127,11 @@ footer a { color: var(--blue); }
   <div class="bar">
     <div class="seg" role="group" aria-label="View">
       <button id="vPerf" aria-pressed="true">Performers</button>
+      <button id="vVenue" aria-pressed="false">Venues</button>
       <button id="vDate" aria-pressed="false">Chronology</button>
     </div>
     <input type="search" id="q" placeholder="Search performer or venue…" aria-label="Search performer or venue">
-    <select id="sort" aria-label="Sort performers">
+    <select id="sort" aria-label="Sort order">
       <option value="az">A–Z</option>
       <option value="count">Most shows</option>
       <option value="recent">Most recent</option>
@@ -136,7 +139,9 @@ footer a { color: var(--blue); }
     <span class="count" id="count"></span>
   </div>
 
-  <div class="years" id="years" role="group" aria-label="Filter by year"></div>
+  <div class="years" id="years" role="group" aria-label="Filter by year">
+    <button class="chip clear" id="clearYear" hidden>All years ✕</button>
+  </div>
 
   <div class="list" id="list"><div class="empty">Loading shows…</div></div>
 
@@ -154,7 +159,7 @@ const $ = s => document.querySelector(s);
 const listEl = $('#list'), countEl = $('#count'), yearsEl = $('#years');
 // Rows above this index render eagerly; past it they get content-visibility.
 const FOLD = 20;
-let DATA = null, PERF = [], view = 'perf', query = '', sortBy = 'az', year = null;
+let DATA = null, PERF = [], VEN = [], view = 'perf', query = '', sortBy = 'az', year = null;
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const iaUrl = id => `https://archive.org/details/${encodeURIComponent(id)}`;
@@ -169,11 +174,14 @@ fetch('shows.json')
 
 function init() {
   PERF = DATA.performers.map((name, i) => ({ i, name, key: name.toLowerCase(), shows: [] }));
-  for (const s of DATA.shows) PERF[s[0]].shows.push(s);   // shows.json is already date-sorted
-  for (const p of PERF) {
+  VEN = DATA.venues.map((name, i) => ({ i, name, key: name.toLowerCase(), shows: [] }));
+  for (const s of DATA.shows) {                           // shows.json is already date-sorted
+    PERF[s[0]].shows.push(s);
+    if (s[2] >= 0) VEN[s[2]].shows.push(s);
+  }
+  for (const g of [PERF, VEN]) for (const p of g) {
     p.n = p.shows.length;
-    p.first = p.shows[0][1].slice(0, 4);
-    p.last = p.shows[p.n - 1][1].slice(0, 4);
+    if (p.n) { p.first = p.shows[0][1].slice(0, 4); p.last = p.shows[p.n - 1][1].slice(0, 4); }
   }
 
   const yrs = [...new Set(DATA.shows.map(s => s[1].slice(0, 4)))].sort();
@@ -185,11 +193,13 @@ function init() {
     `<span><a href="${DATA.source}">on archive.org</a></span>`;
   $('#gen').textContent = DATA.generated ? `Indexed ${DATA.generated}.` : '';
 
-  yearsEl.innerHTML = yrs.map(y => `<button class="chip" data-y="${y}" aria-pressed="false">${y}</button>`).join('');
+  // Chips go after the clear button, which stays in the DOM and is shown on demand.
+  yearsEl.insertAdjacentHTML('beforeend',
+    yrs.map(y => `<button class="chip" data-y="${y}" aria-pressed="false">${y}</button>`).join(''));
   yearsEl.addEventListener('click', e => {
     const b = e.target.closest('.chip'); if (!b) return;
-    year = (year === b.dataset.y) ? null : b.dataset.y;
-    for (const c of yearsEl.children) c.setAttribute('aria-pressed', String(c.dataset.y === year));
+    year = (b.id === 'clearYear') ? null : (year === b.dataset.y ? null : b.dataset.y);
+    syncYears();
     render();
   });
 
@@ -200,6 +210,7 @@ function init() {
   });
   $('#sort').addEventListener('change', e => { sortBy = e.target.value; render(); });
   $('#vPerf').addEventListener('click', () => setView('perf'));
+  $('#vVenue').addEventListener('click', () => setView('venue'));
   $('#vDate').addEventListener('click', () => setView('date'));
 
   // Jump from a chronology row to that performer's entry.
@@ -215,13 +226,22 @@ function init() {
   render();
 }
 
+function syncYears() {
+  for (const c of yearsEl.children) {
+    if (!c.dataset.y) continue;
+    c.setAttribute('aria-pressed', String(c.dataset.y === year));
+  }
+  $('#clearYear').hidden = (year === null);
+}
+
 function setView(v) {
   view = v;
   $('#vPerf').setAttribute('aria-pressed', String(v === 'perf'));
+  $('#vVenue').setAttribute('aria-pressed', String(v === 'venue'));
   $('#vDate').setAttribute('aria-pressed', String(v === 'date'));
   const sel = $('#sort');
-  sel.disabled = (v !== 'perf');
-  sel.style.opacity = (v === 'perf') ? 1 : .45;
+  sel.disabled = (v === 'date');          // sorting applies to the two grouped views
+  sel.style.opacity = (v === 'date') ? .45 : 1;
   render();
 }
 
@@ -230,21 +250,29 @@ const matchShow = s =>
   (!year || s[1].startsWith(year)) &&
   (!query || PERF[s[0]].key.includes(query) || venueOf(s).toLowerCase().includes(query));
 
-function render() { view === 'perf' ? renderPerformers() : renderChronology(); }
+function render() {
+  if (view === 'date') renderChronology();
+  else renderGrouped(view === 'perf' ? PERF : VEN, view);
+}
 
-function showRow(s, withWho) {
+// mode: 'perf' lists the venue, 'venue' lists who played, 'date' lists both.
+function showRow(s, mode) {
   const v = venueOf(s);
+  const who = `<button class="who" data-p="${s[0]}">${esc(DATA.performers[s[0]])}</button>`;
+  const ven = v ? esc(v) : '<span class="unk">venue unknown</span>';
+  const mid = mode === 'perf' ? ven : mode === 'venue' ? who : `${who} · ${ven}`;
   return `<div class="srow">` +
     `<span class="dt">${s[1]}</span>` +
-    `<span class="vn">${withWho ? `<button class="who" data-p="${s[0]}">${esc(DATA.performers[s[0]])}</button> · ` : ''}` +
-      `${v ? esc(v) : '<span class="unk">venue unknown</span>'}</span>` +
+    `<span class="vn">${mid}</span>` +
     `<a href="${iaUrl(s[3])}" target="_blank" rel="noopener">listen ↗</a>` +
   `</div>`;
 }
 
-function renderPerformers() {
+function renderGrouped(group, kind) {
+  const noun = kind === 'perf' ? 'performers' : 'venues';
+  const attr = kind === 'perf' ? 'data-p' : 'data-v';
   let rows = [];
-  for (const p of PERF) {
+  for (const p of group) {
     const shows = p.shows.filter(matchShow);
     if (shows.length) rows.push({ p, shows });
   }
@@ -253,8 +281,8 @@ function renderPerformers() {
   else rows.sort((a, b) => b.shows.at(-1)[1].localeCompare(a.shows.at(-1)[1]));
 
   const total = rows.reduce((n, r) => n + r.shows.length, 0);
-  countEl.textContent = `${rows.length.toLocaleString()} performers · ${total.toLocaleString()} shows`;
-  if (!rows.length) { listEl.innerHTML = `<div class="empty">No performers match.</div>`; return; }
+  countEl.textContent = `${rows.length.toLocaleString()} ${noun} · ${total.toLocaleString()} shows`;
+  if (!rows.length) { listEl.innerHTML = `<div class="empty">No ${noun} match.</div>`; return; }
 
   const out = [];
   let letter = null, i = 0;
@@ -263,13 +291,14 @@ function renderPerformers() {
       const L = /[a-z]/.test(p.key[0]) ? p.key[0].toUpperCase() : '#';
       if (L !== letter) { letter = L; out.push(`<div class="gh">${L}</div>`); }
     }
-    const span = p.last !== p.first ? `${p.first}–${p.last}` : p.first;
-    // name="perf" makes these an exclusive accordion natively — one open at a time.
+    const first = shows[0][1].slice(0, 4), last = shows.at(-1)[1].slice(0, 4);
+    const span = last !== first ? `${first}–${last}` : first;
+    // A shared name= makes these an exclusive accordion natively — one open at a time.
     out.push(
-      `<details data-p="${p.i}" name="perf"${i++ >= FOLD ? ' class="defer"' : ''}>` +
+      `<details ${attr}="${p.i}" name="${kind}"${i++ >= FOLD ? ' class="defer"' : ''}>` +
         `<summary><span class="nm">${esc(p.name)}</span>` +
         `<span class="ct">${shows.length} show${shows.length > 1 ? 's' : ''} · ${span}</span></summary>` +
-        `<div class="detail">${shows.map(s => showRow(s, false)).join('')}</div>` +
+        `<div class="detail">${shows.map(s => showRow(s, kind)).join('')}</div>` +
       `</details>`);
   }
   listEl.className = 'list';
@@ -287,8 +316,8 @@ function renderChronology() {
     const sy = s[1].slice(0, 4);
     if (sy !== y) { y = sy; out.push(`<div class="gh">${y}</div>`); }
     out.push(i++ >= FOLD
-      ? showRow(s, true).replace('class="srow"', 'class="srow defer"')
-      : showRow(s, true));
+      ? showRow(s, 'date').replace('class="srow"', 'class="srow defer"')
+      : showRow(s, 'date'));
   }
   listEl.className = 'list chrono';
   listEl.innerHTML = out.join('');
