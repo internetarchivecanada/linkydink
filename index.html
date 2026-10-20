@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Linkydink Band Map</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Linkydink</h1>
+    <p class="tagline">Bands, the people in them, and how they connect.</p>
+    <div class="controls">
+      <label>
+        <span>Find</span>
+        <input id="search" list="all-names" placeholder="Band or musician" autocomplete="off">
+      </label>
+      <label>
+        <span>Link from</span>
+        <input id="path-from" list="people-names" placeholder="Musician" autocomplete="off">
+      </label>
+      <label>
+        <span>to</span>
+        <input id="path-to" list="people-names" placeholder="Musician" autocomplete="off">
+      </label>
+      <button id="clear" type="button">Clear</button>
+    </div>
+    <datalist id="all-names"></datalist>
+    <datalist id="people-names"></datalist>
+  </header>
+
+  <main>
+    <div id="graph" aria-label="Network of bands and musicians"></div>
+    <aside id="panel">
+      <p class="hint">Click a band or musician to see its connections. Drag to rearrange, scroll to zoom.</p>
+    </aside>
+  </main>
+
+  <footer class="legend">
+    <span><i class="dot band"></i>Band</span>
+    <span><i class="dot solo"></i>Solo act</span>
+    <span><i class="dot person"></i>Musician</span>
+    <span><i class="line dashed"></i>Former, touring or guest</span>
+    <span><i class="line unverified"></i>Unverified</span>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+:root {
+  --bg: #faf8f4;
+  --surface: #ffffff;
+  --text: #1d1b18;
+  --muted: #6b665e;
+  --border: #e3ded5;
+  --band: #c2410c;
+  --solo: #7c3aed;
+  --person: #0f766e;
+  --link: #b8b1a6;
+  --highlight: #eab308;
+  --unverified: #dc2626;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161513;
+    --surface: #211f1c;
+    --text: #ece8e1;
+    --muted: #a39d93;
+    --border: #3a3631;
+    --band: #fb923c;
+    --solo: #a78bfa;
+    --person: #2dd4bf;
+    --link: #57524b;
+    --highlight: #facc15;
+    --unverified: #f87171;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; }
+
+body {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+header { padding: 16px 20px 8px; border-bottom: 1px solid var(--border); }
+h1 { margin: 0; font-size: 22px; letter-spacing: -0.01em; }
+.tagline { margin: 2px 0 12px; color: var(--muted); }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
+.controls label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--muted); }
+.controls input, .controls button {
+  font: inherit;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  min-width: 0;
+}
+.controls input { width: 200px; }
+.controls button { cursor: pointer; }
+.controls button:hover { border-color: var(--muted); }
+
+main { flex: 1; display: flex; min-height: 0; }
+#graph { flex: 1; min-width: 0; position: relative; }
+#graph svg { display: block; width: 100%; height: 100%; cursor: grab; }
+#graph svg:active { cursor: grabbing; }
+
+#panel {
+  width: 300px;
+  padding: 16px 18px;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  overflow-y: auto;
+}
+#panel h2 { margin: 0 0 2px; font-size: 18px; }
+#panel h3 { margin: 16px 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+#panel ul { margin: 0; padding: 0; list-style: none; }
+#panel li { padding: 4px 0; border-bottom: 1px solid var(--border); }
+#panel li:last-child { border-bottom: 0; }
+#panel .kind { color: var(--muted); font-size: 13px; }
+#panel .meta { color: var(--muted); font-size: 13px; }
+#panel .warn { color: var(--unverified); font-size: 13px; }
+#panel .hint { color: var(--muted); }
+#panel a { color: inherit; text-decoration: underline; text-decoration-color: var(--border); cursor: pointer; }
+#panel a:hover { text-decoration-color: currentColor; }
+#panel ol.path { padding-left: 20px; margin: 0; }
+#panel ol.path li { border: 0; }
+
+.link { stroke: var(--link); stroke-width: 1.5; }
+.link.soft { stroke-dasharray: 4 3; }
+.link.unverified { stroke: var(--unverified); stroke-dasharray: 2 3; }
+.node circle { stroke: var(--bg); stroke-width: 2; cursor: pointer; }
+.node.band circle { fill: var(--band); }
+.node.solo circle { fill: var(--solo); }
+.node.person circle { fill: var(--person); }
+.node text {
+  fill: var(--text);
+  font-size: 11px;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.node.band text, .node.solo text { font-weight: 600; font-size: 12px; }
+
+svg.focused .node, svg.focused .link { opacity: 0.12; transition: opacity 0.15s; }
+svg.focused .node.lit, svg.focused .link.lit { opacity: 1; }
+.node.selected circle { stroke: var(--highlight); stroke-width: 3; }
+.link.on-path { stroke: var(--highlight); stroke-width: 3; }
+
+.legend {
+  display: flex; flex-wrap: wrap; gap: 6px 18px;
+  padding: 8px 20px; border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--muted);
+}
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.dot.band { background: var(--band); }
+.dot.solo { background: var(--solo); }
+.dot.person { background: var(--person); }
+.line { width: 22px; height: 0; display: inline-block; border-top: 2px dashed var(--link); }
+.line.unverified { border-top: 2px dotted var(--unverified); }
+
+@media (max-width: 760px) {
+  header { padding: 12px 16px 8px; }
+  .controls input { width: 100%; }
+  .controls label { flex: 1 1 140px; }
+  main { flex-direction: column; }
+  #graph { min-height: 60vh; }
+  #panel { width: auto; border-left: 0; border-top: 1px solid var(--border); }
+  .legend { padding: 8px 16px; }
+}
