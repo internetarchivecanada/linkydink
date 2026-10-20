@@ -154,7 +154,7 @@ body.has-player { padding-bottom: 280px; }
 .player-head .meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .player-head button { font: 500 12px var(--font-mono); background: none; border: 1px solid var(--border); color: var(--ink); border-radius: 999px; padding: 3px 10px; cursor: pointer; flex: none; }
 .player audio { width: 100%; }
-.tracks { list-style: none; margin: 0; padding: 0; max-height: 132px; overflow-y: auto; border: 1px solid var(--line); border-radius: 6px; }
+.tracks { position: relative; list-style: none; margin: 0; padding: 0; max-height: 132px; overflow-y: auto; border: 1px solid var(--line); border-radius: 6px; }
 .tracks li { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; padding: 4px 10px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--line); }
 .tracks li:last-child { border-bottom: 0; }
 .tracks li:hover { background: var(--chip); }
@@ -262,7 +262,13 @@ function playTrack(i) {
   audio.src = tracks[i].url;
   audio.play().catch(() => {});
   trackList.querySelectorAll("li").forEach((li, j) => li.classList.toggle("cur", j === i));
-  trackList.children[i]?.scrollIntoView({ block: "nearest" });
+  // scroll only inside the track list, never the page
+  const li = trackList.children[i];
+  if (li) {
+    if (li.offsetTop < trackList.scrollTop) trackList.scrollTop = li.offsetTop;
+    else if (li.offsetTop + li.offsetHeight > trackList.scrollTop + trackList.clientHeight)
+      trackList.scrollTop = li.offsetTop + li.offsetHeight - trackList.clientHeight;
+  }
 }
 audio.addEventListener("ended", () => playTrack(cur + 1));
 
@@ -498,9 +504,7 @@ function step(dir) {
   const rows = stepRows();
   const i = rows.indexOf(sel) + dir;
   if (i < 0 || i >= rows.length) return;
-  play(rows[i]);
-  const row = document.querySelector(`.row[data-d="${rows[i].d}"]`);
-  if (row && !row.closest(".list").hidden) row.scrollIntoView({ block: "nearest" });
+  play(rows[i]);   // the page stays where it is, so the arrows and the map stay in view
 }
 
 function render(from) {
