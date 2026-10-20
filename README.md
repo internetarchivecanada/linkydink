@@ -23,6 +23,8 @@ cd linkydink
 
 _TODO: how to install and run it._
 
+Working in this repo alongside others: see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Status
 
 Hackathon prototype: expect rough edges.
