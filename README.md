@@ -10,6 +10,7 @@ _TODO: one or two sentences on the idea._
 
 - Brewster Kahle (brewster@archive.org)
 - Dan Visel (danvisel@archive.org)
+- Brian Eggert
 - mojomonger (mojomonger@archive.org)
 - _add yourself here_
 
