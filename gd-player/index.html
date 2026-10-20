@@ -582,7 +582,7 @@ function wire() {
 async function init() {
   $("listTitle").textContent = "Loading shows…";
   const [data, us] = await Promise.all([
-    fetch("shows.json").then(r => r.json()),
+    fetch("shows.json", { cache: "no-cache" }).then(r => r.json()),   // revalidate, so a rebuilt data file shows up at once
     fetch("https://cdn.jsdelivr.net/npm/us-atlas@3.0.1/states-10m.json").then(r => r.json()),
   ]);
   SHOWS = data.shows;
