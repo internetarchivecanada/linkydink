@@ -108,8 +108,94 @@ SELECT ?bandLabel ?mbid ?discogs WHERE {
 Verified: this returns `b10bbbfc-…` and `82730` for The Beatles, matching the
 IDs used in the direct API calls above.
 
+## Internet Archive Live Music Archive (LMA / etree)
+
+Tested 2026-10-20. The collection is `etree`: **305,507 items** across
+**9,329 band collections**. The `ia` CLI (5.12.0) is already installed locally.
+
+### The join key is the band sub-collection, not `creator`
+
+Every item's `collection` field contains a per-band collection alongside
+`etree`:
+
+```
+identifier  01-track-01_20200827
+creator     Ween
+collection  Ween, etree, fav-chocolate_mike
+```
+
+That `Ween` entry is LMA's normalized band identifier. Use it as the key.
+The `creator` field is free text and varies between uploaders.
+
+> Note for `player/seedlist.json`: it currently keys on free-text `artist`
+> ("Grateful Dead", "Jack Johnson"). Adding the band collection id to each
+> track would make it joinable to the sources above.
+
+### There is no ready-made link to Wikidata
+
+I searched Wikidata's property list for both "Live Music Archive" and
+"etree" — **no property exists**. So there is no off-the-shelf join; we have
+to build it.
+
+MusicBrainz *does* carry the link, as a `download for free` URL relation:
+
+```
+https://musicbrainz.org/ws/2/artist/<MBID>?inc=url-rels&fmt=json
+→ [download for free] https://archive.org/details/GratefulDead
+```
+
+But it is **sparse**. In a sample of 8 LMA bands, 7 were in MusicBrainz and
+only **2** had the archive.org relation — Phish and Ween, both major LMA
+artists, did not. Treat it as a high-confidence seed, not as coverage.
+
+### Collection IDs are derivable from band names
+
+The identifiers are the band title with punctuation stripped
+(`Grateful Dead` → `GratefulDead`). Measured over 1,000 real band
+collections, normalizing to lowercase, mapping `&`/`+` to `and`, and
+stripping non-alphanumerics:
+
+| Result | Count | Share |
+|---|---|---|
+| Exact match | 914 | 91.4% |
+| Prefix match | 76 | 7.6% |
+| No match | 10 | 1.0% |
+
+So ~99% resolve programmatically. The 1% that fail are parentheticals
+(`Adamsson, Gianfriddo & Sutka (AGS)`), leading articles (`The Authority` →
+`AuthorityBand`), diacritics (`Axon Zaëda`) and plain typos
+(`BabyCalender` vs `Baby Calendar`).
+
+**Suggested approach:** normalize-and-match as the primary join, using the
+MusicBrainz `download for free` relations as ground truth to validate the
+matcher, then hand-review the residue.
+
+### Useful endpoints
+
+```bash
+# count items in a collection
+curl 'https://archive.org/advancedsearch.php?q=collection%3Aetree&rows=0&output=json'
+
+# bulk export (note: count has a minimum of 100)
+curl 'https://archive.org/services/search/v1/scrape?q=collection%3Aetree&fields=identifier,creator,date,collection&count=100'
+
+# full metadata for one item
+curl 'https://archive.org/metadata/<identifier>'
+```
+
+### Caveat: per-item metadata is inconsistent
+
+Fields vary by uploader. The Ween item above had `venue` and `date` but no
+`source`, `lineage`, `taper` or `licenseurl` at all. Anything built on
+show-level fields needs to tolerate them being absent rather than assume the
+schema. Rights also sit per item, so don't infer a blanket license for the
+collection from any one example.
+
 ## Recommendation
 
+0. **LMA band collection id** as the local key for anything Live Music
+   Archive, joined outward by name normalization and validated against
+   MusicBrainz's `download for free` links.
 1. **Wikidata** for the entity graph and cross-source IDs — CC0, no key, no
    rate limit, and it links out to everything else.
 2. **MusicBrainz** when we need instruments, original-member flags, or more
