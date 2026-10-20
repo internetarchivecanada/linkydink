@@ -12,6 +12,7 @@ _TODO: one or two sentences on the idea._
 - Dan Visel (danvisel@archive.org)
 - Brian Eggert (brian.eggert@archive.org)
 - mojomonger (mojomonger@archive.org)
+- Connie Moon Sehat (connie.moon.sehat@archive.org)
 - _add yourself here_
 
 ## Getting started
