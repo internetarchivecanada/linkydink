@@ -57,6 +57,10 @@ Every page shares a menu bar from [nav.js](nav.js); add new pages to its list.
 
 Pushes to `main` show up here within a minute or so.
 
+## Command-line tools
+
+- [ask-alice](ask-alice/): ask questions about *Alice's Adventures in Wonderland* (the Gutenberg text on archive.org), answered by an LLM on IA's BCDC GPU cluster with chapter citations. Needs the IA VPN.
+
 ## How it fits together
 
 | Folder | Data it carries | What it fetches from archive.org |
