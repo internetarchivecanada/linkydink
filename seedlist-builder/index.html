@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seedlist builder · Grateful Dead 1971</title>
+<script src="../nav.js" defer></script>
+<style>
+:root {
+  --bg: #f4f4f1; --panel: #fff; --ink: #1d2230; --muted: #626a78; --line: #dcdcd6;
+  --land: #e5e6e0; --red: #c4302b; --blue: #3556a0; --chip: #ececE6;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #12151c; --panel: #1a1e27; --ink: #e6e8ee; --muted: #9aa1ae; --line: #2c3240; --land: #222834; --red: #ef615b; --blue: #7d9be0; --chip: #252b38; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 24px 16px 48px; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, sans-serif; }
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 16px; }
+h1 { font: 400 clamp(28px, 5vw, 44px)/1.1 Georgia, serif; margin: 0; }
+.lede { color: var(--muted); margin: 4px 0 0; max-width: 70ch; }
+.grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.panel h2 { font: 400 20px Georgia, serif; margin: 0 0 2px; }
+.panel .sub { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+svg { display: block; width: 100%; height: auto; }
+.state { fill: var(--land); stroke: var(--bg); stroke-width: .8; }
+.dot { fill: var(--red); fill-opacity: .8; stroke: var(--panel); stroke-width: 1.2; cursor: pointer; }
+.dot.on { stroke: var(--ink); stroke-width: 2.2; }
+.seedpath { fill: none; stroke: var(--blue); stroke-width: 1.6; stroke-dasharray: 4 3; }
+.pin circle { fill: var(--blue); stroke: var(--panel); stroke-width: 1.5; }
+.pin text { fill: #fff; font: 600 16px var(--mono); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.inset { fill: none; stroke: var(--line); stroke-dasharray: 2 3; }
+.inset-t, .lbl { font: 11px var(--mono); fill: var(--muted); }
+.lbl { fill: var(--ink); paint-order: stroke; stroke: var(--panel); stroke-width: 3px; pointer-events: none; }
+button { font: 500 12px var(--mono); color: var(--ink); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+button:hover { border-color: var(--muted); }
+button.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+button:focus-visible, .show:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+ul { list-style: none; margin: 0; padding: 0; }
+.show { display: grid; grid-template-columns: 54px 1fr auto; gap: 8px; padding: 6px 4px; border-top: 1px solid var(--line); cursor: pointer; }
+.show:hover, .show.open { background: var(--chip); }
+.show .dt, .trk .n, .trk .len, .seed .n { font: 12px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.show small { color: var(--muted); }
+.tracks { max-height: 300px; overflow-y: auto; border: 1px solid var(--line); border-radius: 6px; margin: 4px 0 8px; }
+.trk { display: grid; grid-template-columns: 24px 1fr auto auto auto; gap: 6px; align-items: center; padding: 3px 8px; border-bottom: 1px solid var(--line); font-size: 13px; }
+.trk:last-child { border-bottom: 0; }
+.trk.cj .t { color: var(--red); font-weight: 600; }
+.trk.added { opacity: .55; }
+.trk button { padding: 1px 8px; }
+.msg { color: var(--muted); font-size: 13px; padding: 6px 4px; }
+.seed { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.seed small { display: block; color: var(--muted); font-size: 12px; }
+.seed .ctl { display: flex; gap: 4px; }
+.seed .ctl button { padding: 1px 7px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.empty { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding: 10px 0 2px; }
+audio { width: 100%; margin-top: 8px; }
+footer { font-size: 12px; color: var(--muted); max-width: 75ch; }
+footer a, .lede a { color: var(--blue); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Seedlist builder</h1>
+    <p class="lede">Pick songs from the Grateful Dead's 1971 shows on the Internet Archive's Live Music Archive. Click a city, open a show, and add tracks. Save the result as a <code>seedlist.json</code> or play it in the <a href="../player/">player</a>.</p>
+  </header>
+
+  <div class="grid">
+    <div class="panel">
+      <svg id="map" viewBox="0 0 975 610" role="img" aria-label="Map of US cities where the Grateful Dead played in 1971; numbered pins mark songs in your seedlist"></svg>
+    </div>
+
+    <div style="display:grid; gap:16px">
+      <section class="panel" aria-labelledby="seedTitle">
+        <h2 id="seedTitle">Your seedlist</h2>
+        <p class="sub" id="seedSub"></p>
+        <ul id="seed"></ul>
+        <div class="actions">
+          <button class="primary" id="openPlayer">Play in player</button>
+          <button id="save">Save seedlist.json</button>
+          <button id="clear">Clear</button>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="cityTitle">
+        <h2 id="cityTitle">Pick a city</h2>
+        <p class="sub" id="citySub">Click a dot on the map. Bigger dots mean more shows.</p>
+        <ul id="shows"></ul>
+        <audio id="preview" controls preload="none" hidden></audio>
+      </section>
+    </div>
+  </div>
+
+  <footer>
+    Show data comes from the <a href="../gd1971-map/">Grateful Dead 1971 map</a> (one recording per date, the most-downloaded one, or one that includes Casey Jones). Track lists and audio are loaded from archive.org when you open a show. Your seedlist is kept in this browser until you clear it.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script>
+const STORE = "linkydink.seedlist";
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const fmt = d => `${MONTHS[+d.slice(5, 7) - 1]} ${+d.slice(8)}`;
+const fileUrl = (id, name) => `https://archive.org/download/${encodeURIComponent(id)}/${name.split("/").map(encodeURIComponent).join("/")}`;
+const mmss = sec => { if (String(sec).includes(":")) return sec; sec = Math.round(+sec || 0); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+const proj = d3.geoAlbersUsa().scale(1300).translate([487.5, 305]);
+const INSET = [880, 70];   // France has no place on a US projection; it gets a corner box
+const svg = d3.select("#map");
+const preview = document.getElementById("preview");
+
+let shows = [], cities = [], city = null, openShow = null, loadSeq = 0;
+let seed = JSON.parse(localStorage.getItem(STORE) || "null")?.tracks || [];
+
+// ---- seedlist ----------------------------------------------------------
+function seedlistJson() {
+  return {
+    name: "Grateful Dead 1971 seedlist",
+    source: "https://archive.org/details/GratefulDead",
+    tracks: seed.map(({ title, artist, date, venue, city, identifier, file }) => ({ title, artist, date, venue, city, identifier, file })),
+  };
+}
+function saveSeed() { localStorage.setItem(STORE, JSON.stringify(seedlistJson())); }
+const inSeed = (id, file) => seed.some(t => t.identifier === id && t.file === file);
+
+function renderSeed() {
+  const ul = document.getElementById("seed");
+  document.getElementById("seedSub").textContent = seed.length
+    ? `${seed.length} song${seed.length > 1 ? "s" : ""} · plays top to bottom`
+    : "Add songs from the shows below.";
+  ul.innerHTML = seed.length ? "" : `<li class="empty">Nothing yet. Open a show and press + on a track.</li>`;
+  seed.forEach((t, i) => {
+    const li = document.createElement("li");
+    li.className = "seed";
+    li.innerHTML = `<span class="n">${i + 1}</span>
+      <div>${esc(t.title)}<small>${fmt(t.date)}, 1971 · ${esc(t.venue)}, ${esc(t.city)}</small></div>
+      <div class="ctl">
+        <button aria-label="Move up" ${i === 0 ? "disabled" : ""}>↑</button>
+        <button aria-label="Move down" ${i === seed.length - 1 ? "disabled" : ""}>↓</button>
+        <button aria-label="Remove">✕</button>
+      </div>`;
+    const [up, down, rm] = li.querySelectorAll("button");
+    up.onclick = () => move(i, -1);
+    down.onclick = () => move(i, 1);
+    rm.onclick = () => { seed.splice(i, 1); changed(); };
+    ul.appendChild(li);
+  });
+  drawPins();
+}
+function move(i, d) { [seed[i], seed[i + d]] = [seed[i + d], seed[i]]; changed(); }
+function changed() { saveSeed(); renderSeed(); if (openShow) renderTracks(); }
+
+document.getElementById("clear").onclick = () => { if (seed.length && confirm("Clear your seedlist?")) { seed = []; changed(); } };
+document.getElementById("save").onclick = () => {
+  if (!seed.length) return alert("Add a song first.");
+  const blob = new Blob([JSON.stringify(seedlistJson(), null, 2) + "\n"], { type: "application/json" });
+  const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: "seedlist.json" });
+  a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById("openPlayer").onclick = () => {
+  if (!seed.length) return alert("Add a song first.");
+  saveSeed();
+  location.href = "../player/?seedlist=local";
+};
+
+// ---- shows and tracks --------------------------------------------------
+function pickCity(c) {
+  city = c; openShow = null; loadSeq++;
+  document.getElementById("cityTitle").textContent = c.name;
+  document.getElementById("citySub").textContent = `${c.ss.length} show${c.ss.length > 1 ? "s" : ""} in 1971 · open one to see its tracks`;
+  renderShows();
+  dots.classed("on", d => d === c);
+}
+function renderShows() {
+  const ul = document.getElementById("shows");
+  ul.innerHTML = "";
+  for (const s of city.ss) {
+    const li = document.createElement("li");
+    li.className = "show" + (openShow === s ? " open" : "");
+    li.tabIndex = 0;
+    li.innerHTML = `<span class="dt">${fmt(s.d)}</span><div>${esc(s.v)}${s.k !== "concert" ? ` <small>(${s.k})</small>` : ""}</div><small>${openShow === s ? "▾" : "▸"}</small>`;
+    li.onclick = () => toggleShow(s);
+    li.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleShow(s); } };
+    ul.appendChild(li);
+    if (openShow === s) {
+      const box = document.createElement("li");
+      box.innerHTML = `<div class="tracks" id="tracks"><div class="msg">Loading tracks from archive.org…</div></div>`;
+      ul.appendChild(box);
+    }
+  }
+  if (openShow?.tracks) renderTracks();
+}
+async function toggleShow(s) {
+  openShow = openShow === s ? null : s;
+  renderShows();
+  if (!openShow || s.tracks) return;
+  const seq = ++loadSeq;
+  try {
+    const files = (await (await fetch(`https://archive.org/metadata/${encodeURIComponent(s.id)}/files`)).json()).result || [];
+    if (seq !== loadSeq) return;   // a newer click won
+    const mp3 = files.filter(f => /\.mp3$/i.test(f.name));
+    // one MP3 per track: prefer the VBR derivatives, fall back to whatever MP3s exist
+    const vbr = mp3.filter(f => f.format === "VBR MP3");
+    let set = vbr.length ? vbr : mp3.filter(f => !/_64kb\.mp3$/i.test(f.name));
+    if (!set.length) set = mp3;
+    set.sort((a, b) => (parseInt(a.track) || 0) - (parseInt(b.track) || 0) || a.name.localeCompare(b.name));
+    s.tracks = set.map(f => ({ file: f.name, title: f.title || f.name.replace(/\.mp3$/i, ""), len: f.length }));
+    if (openShow === s) renderTracks();
+  } catch (e) {
+    if (seq === loadSeq) document.getElementById("tracks").innerHTML = `<div class="msg">Couldn't load the tracks from archive.org. Check your connection and open the show again.</div>`;
+  }
+}
+function renderTracks() {
+  const s = openShow, box = document.getElementById("tracks");
+  if (!box) return;
+  if (!s.tracks.length) { box.innerHTML = `<div class="msg">No playable MP3s in this recording.</div>`; return; }
+  box.innerHTML = "";
+  s.tracks.forEach((t, i) => {
+    const added = inSeed(s.id, t.file);
+    const row = document.createElement("div");
+    row.className = "trk" + (t.file === s.cj ? " cj" : "") + (added ? " added" : "");
+    row.innerHTML = `<span class="n">${i + 1}</span><span class="t"></span><span class="len">${t.len ? mmss(t.len) : ""}</span>
+      <button aria-label="Preview">▶</button><button aria-label="Add to seedlist">${added ? "✓" : "+"}</button>`;
+    row.querySelector(".t").textContent = t.title;
+    const [play, add] = row.querySelectorAll("button");
+    play.onclick = () => { preview.hidden = false; preview.src = fileUrl(s.id, t.file); preview.play().catch(() => {}); };
+    add.onclick = () => {
+      if (added) return;
+      seed.push({ title: t.title, artist: "Grateful Dead", date: s.d, venue: s.v, city: s.c, identifier: s.id, file: t.file });
+      changed();
+    };
+    box.appendChild(row);
+  });
+}
+
+// ---- map ---------------------------------------------------------------
+let dots, pinG, pathG;
+function drawPins() {
+  if (!pinG) return;
+  const at = t => shows.find(s => s.id === t.identifier) || shows.find(s => s.d === t.date);
+  const pts = seed.map(at).filter(Boolean).map(s => s.xy);
+  pathG.attr("d", pts.length > 1 ? d3.line()(pts.filter(p => p !== INSET)) : null);
+  // pins for the same or nearby cities stack upward so every number stays visible
+  const pins = [];
+  seed.forEach((t, i) => {
+    const s = at(t); if (!s) return;
+    const [x, y] = s.xy;
+    let py = y - 22;
+    while (pins.some(p => Math.abs(p.x - x) < 26 && Math.abs(p.y - py) < 26)) py -= 27;
+    pins.push({ i, x, y: py });
+  });
+  pinG.selectAll("g").data(pins).join(enter => { const g = enter.append("g").attr("class", "pin"); g.append("circle").attr("r", 13); g.append("text"); return g; })
+    .attr("transform", p => `translate(${p.x},${p.y})`)
+    .select("text").text(p => p.i + 1);
+}
+
+Promise.all([
+  fetch("shows.json").then(r => r.json()),
+  fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json").then(r => r.json()),
+]).then(([data, us]) => {
+  shows = data.shows;
+  shows.forEach(s => { s.xy = proj([s.lon, s.lat]) || INSET; });
+  cities = [...d3.group(shows, s => s.c)].map(([name, ss]) => ({ name, ss, xy: ss[0].xy }));
+  const r = d3.scaleSqrt().domain([1, d3.max(cities, c => c.ss.length)]).range([5, 17]);
+
+  svg.append("g").selectAll("path").data(topojson.feature(us, us.objects.states).features)
+    .join("path").attr("class", "state").attr("d", d3.geoPath(proj));
+  svg.append("rect").attr("class", "inset").attr("x", INSET[0] - 60).attr("y", INSET[1] - 40).attr("width", 120).attr("height", 80).attr("rx", 6);
+  svg.append("text").attr("class", "inset-t").attr("x", INSET[0]).attr("y", INSET[1] + 32).attr("text-anchor", "middle").text("France");
+  pathG = svg.append("path").attr("class", "seedpath");
+  dots = svg.append("g").selectAll("circle").data(cities.sort((a, b) => b.ss.length - a.ss.length)).join("circle")
+    .attr("class", "dot").attr("cx", c => c.xy[0]).attr("cy", c => c.xy[1]).attr("r", c => r(c.ss.length))
+    .on("click", (e, c) => pickCity(c));
+  dots.append("title").text(c => `${c.name} · ${c.ss.length} show${c.ss.length > 1 ? "s" : ""}`);
+  svg.append("g").selectAll("text").data(cities.filter(c => c.ss.length >= 3)).join("text")
+    .attr("class", "lbl").attr("x", c => c.xy[0] + r(c.ss.length) + 4).attr("y", c => c.xy[1] + 4).text(c => c.name.split(",")[0]);
+  pinG = svg.append("g");
+  renderSeed();
+}).catch(() => {
+  document.getElementById("citySub").textContent = "Couldn't load the map data. Serve this folder over http (not as a file) and reload.";
+});
+renderSeed();
+</script>
+</body>
+</html>
