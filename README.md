@@ -6,6 +6,16 @@ A hackathon project at the Internet Archive.
 
 _TODO: one or two sentences on the idea._
 
+## See it live
+
+Everything on `main` is published with GitHub Pages; each folder is its own page.
+
+- [Casey Jones, 1971](https://internetarchivecanada.github.io/linkydink/casey-jones-1971/): map and timetable of the 72 dates the Grateful Dead played it in 1971
+- [Grateful Dead 1971 map](https://internetarchivecanada.github.io/linkydink/gd1971-map/)
+- [Player](https://internetarchivecanada.github.io/linkydink/player/)
+
+Pushes to `main` show up here within a minute or so.
+
 ## Team
 
 - Brewster Kahle (brewster@archive.org)
