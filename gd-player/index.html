@@ -1,0 +1,559 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grateful Dead Shows</title>
+<script src="../nav.js" defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: same tour-ledger look as gd1971-map — a date-range picker over a shows-per-year strip, the map, then the dates */
+:root {
+  --bg: #f2f3f6;
+  --panel: #ffffff;
+  --ink: #1a2230;
+  --muted: #5d6676;
+  --line: #d5d9e1;
+  --land: #e2e5ec;
+  --border: #b9bfcb;
+  --red: #c4302b;
+  --blue: #3556a0;
+  --chip: #e6e9ef;
+  --pick: #ff8a00;
+  --font-display: "Gloock", "Georgia", serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11151d; --panel: #181d27; --ink: #e5e8ef; --muted: #98a1b2; --line: #2b3240;
+    --land: #1f2531; --border: #3a4253; --red: #ef615b; --blue: #7d9be0; --chip: #232a37; --pick: #ff9a1f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11151d; --panel: #181d27; --ink: #e5e8ef; --muted: #98a1b2; --line: #2b3240;
+  --land: #1f2531; --border: #3a4253; --red: #ef615b; --blue: #7d9be0; --chip: #232a37; --pick: #ff9a1f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+}
+.wrap {
+  max-width: 1120px; margin: 0 auto; display: grid; gap: 20px;
+  padding: 12px max(16px, env(safe-area-inset-right, 0px)) 48px max(16px, env(safe-area-inset-left, 0px));
+}
+header { display: grid; gap: 6px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(34px, 7vw, 60px); line-height: 1; margin: 0; text-wrap: balance; }
+h1 span { color: var(--red); white-space: nowrap; }
+.stats { display: flex; flex-wrap: wrap; gap: 6px 20px; font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stats b { color: var(--ink); font-weight: 500; }
+
+.range { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 12px; display: grid; gap: 10px; }
+.dates { display: flex; flex-wrap: wrap; align-items: end; gap: 10px 16px; }
+.dates label { display: grid; gap: 2px; font: 500 12px var(--font-mono); color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.dates input[type="date"] {
+  font: 500 15px var(--font-mono); color: var(--ink); background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 8px; font-variant-numeric: tabular-nums;
+}
+.eras { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.eras button {
+  font: 500 12px var(--font-mono); color: var(--ink); background: var(--chip); border: 1px solid transparent;
+  border-radius: 999px; padding: 5px 10px; cursor: pointer; font-variant-numeric: tabular-nums;
+}
+.eras button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.hist { display: block; width: 100%; height: 64px; }
+.hist rect { fill: var(--border); }
+.hist rect.in { fill: var(--red); }
+.hist text { font: 10px var(--font-mono); fill: var(--muted); }
+.slider { position: relative; height: 22px; margin: -6px 0 0; }
+.slider input {
+  position: absolute; inset: 0; width: 100%; margin: 0; background: none; pointer-events: none;
+  -webkit-appearance: none; appearance: none; height: 22px;
+}
+.slider .track { position: absolute; left: 0; right: 0; top: 9px; height: 4px; border-radius: 2px; background: var(--line); }
+.slider .fill { position: absolute; top: 9px; height: 4px; border-radius: 2px; background: var(--red); }
+.slider input::-webkit-slider-runnable-track { background: none; height: 22px; }
+.slider input::-moz-range-track { background: none; }
+.slider input::-webkit-slider-thumb {
+  -webkit-appearance: none; pointer-events: auto; width: 18px; height: 18px; margin-top: 2px; border-radius: 50%;
+  background: var(--panel); border: 2px solid var(--red); cursor: grab;
+}
+.slider input::-moz-range-thumb { pointer-events: auto; width: 14px; height: 14px; border-radius: 50%; background: var(--panel); border: 2px solid var(--red); cursor: grab; }
+.slider input:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--blue); outline-offset: 2px; }
+.slider input:focus-visible::-moz-range-thumb { outline: 2px solid var(--blue); outline-offset: 2px; }
+.eras button:focus-visible, .city-btn:focus-visible, .row a:focus-visible, .abroad button:focus-visible, .dates input:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.stepper { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; border-top: 1px solid var(--line); padding-top: 10px; }
+.stepper button.arrow {
+  width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg); color: var(--ink);
+  font-size: 20px; line-height: 1; cursor: pointer; display: grid; place-items: center;
+}
+.stepper button.arrow:hover:not(:disabled) { border-color: var(--pick); color: var(--pick); }
+.stepper button.arrow:disabled { opacity: .3; cursor: default; }
+.stepper button.arrow:focus-visible, .stepper .now:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.stepper .now { text-align: center; min-width: 0; background: none; border: 0; color: var(--ink); cursor: pointer; padding: 2px 4px; border-radius: 6px; font: inherit; }
+.stepper .now b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 22px; line-height: 1.15; overflow-wrap: anywhere; }
+.stepper .now b::before { content: ""; display: inline-block; width: 11px; height: 11px; border-radius: 50%; background: var(--pick); margin-right: 8px; vertical-align: 2px; }
+.stepper .now span { display: block; font: 13px var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pick { fill: var(--pick); stroke: var(--ink); stroke-width: 2; pointer-events: none; }
+.pick-halo { fill: none; stroke: var(--pick); stroke-width: 2; opacity: .55; pointer-events: none; }
+.legend i.pk { background: var(--pick); }
+.row.sel { background: color-mix(in srgb, var(--pick) 14%, transparent); }
+.row.sel .dt { color: var(--pick); font-weight: 500; }
+.mapbox { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+.mapbox svg { display: block; width: 100%; height: auto; }
+.state { fill: var(--land); stroke: var(--bg); stroke-width: .8; }
+.nation { fill: none; stroke: var(--border); stroke-width: .8; }
+.dot { fill: var(--red); fill-opacity: .7; stroke: var(--panel); stroke-width: 1; cursor: pointer; }
+.dot:hover, .dot.on { fill-opacity: 1; stroke: var(--ink); stroke-width: 2; }
+.lbl { font: 500 11px var(--font-mono); fill: var(--ink); paint-order: stroke; stroke: var(--panel); stroke-width: 3px; pointer-events: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; color: var(--muted); padding: 6px 8px 2px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--red); margin-right: 6px; vertical-align: -1px; }
+.abroad { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 5px; padding: 6px 8px 2px; font-size: 13px; color: var(--muted); }
+.abroad button { font: 11px var(--font-mono); background: var(--chip); color: var(--ink); border: 1px solid transparent; border-radius: 999px; padding: 2px 9px; cursor: pointer; }
+.abroad button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); pointer-events: none; }
+.empty[hidden] { display: none; }
+.tip {
+  position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); border-radius: 6px; padding: 7px 10px;
+  font-size: 12px; line-height: 1.4; max-width: 260px; z-index: 5;
+}
+.tip b { font-family: var(--font-display); font-weight: 400; font-size: 15px; display: block; margin-bottom: 2px; }
+.tip span { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.listhead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.listhead h2 { font-family: var(--font-display); font-weight: 400; font-size: 24px; margin: 0; }
+.city-btn { font: 500 12px var(--font-mono); background: none; border: 1px solid var(--border); color: var(--ink); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+.list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0 28px; }
+.yr { font: 500 12px var(--font-mono); letter-spacing: .08em; color: var(--red); padding: 14px 0 4px; border-bottom: 1px solid var(--line); grid-column: 1 / -1; }
+.row { display: grid; grid-template-columns: 52px 1fr auto; gap: 10px; align-items: baseline; padding: 7px 0; border-bottom: 1px solid var(--line); min-width: 0; cursor: pointer; }
+.row:hover .v div { color: var(--blue); }
+.row .dt { font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.row .v { min-width: 0; }
+.row .v div { font-weight: 500; overflow-wrap: anywhere; }
+.row .v small { color: var(--muted); font-size: 13px; }
+.row a { font: 12px var(--font-mono); color: var(--blue); text-decoration: none; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.row a:hover { text-decoration: underline; }
+.row.playing .dt { color: var(--red); }
+.row.playing .dt::before { content: "▶ "; }
+.more { grid-column: 1 / -1; justify-self: start; margin-top: 12px; }
+
+body.has-player { padding-bottom: 280px; }
+.player {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--panel); border-top: 1px solid var(--line);
+  box-shadow: 0 -6px 20px rgba(0,0,0,.12);
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.player-in { max-width: 1120px; margin: 0 auto; display: grid; gap: 6px; }
+.player-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; min-width: 0; }
+.player-head b { font-family: var(--font-display); font-weight: 400; font-size: 17px; }
+.player-head span { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.player-head .meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player-head button { font: 500 12px var(--font-mono); background: none; border: 1px solid var(--border); color: var(--ink); border-radius: 999px; padding: 3px 10px; cursor: pointer; flex: none; }
+.player audio { width: 100%; }
+.tracks { list-style: none; margin: 0; padding: 0; max-height: 132px; overflow-y: auto; border: 1px solid var(--line); border-radius: 6px; }
+.tracks li { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; padding: 4px 10px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--line); }
+.tracks li:last-child { border-bottom: 0; }
+.tracks li:hover { background: var(--chip); }
+.tracks li span { font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tracks li.cur { background: var(--chip); color: var(--red); font-weight: 600; }
+.tracks li.msg { cursor: default; color: var(--muted); display: block; }
+footer { font-size: 12px; color: var(--muted); max-width: 72ch; }
+footer a { color: var(--blue); }
+/* short windows: keep the player bar small so the map stays visible while stepping */
+@media (max-height: 820px) {
+  .tracks { max-height: 84px; }
+  .tracks li { padding: 2px 10px; }
+  .player audio { height: 36px; }
+  body.has-player { padding-bottom: 200px; }
+}
+@media (max-width: 560px) {
+  .list { grid-template-columns: 1fr; }
+  .lbl { display: none; }
+  .eras { margin-left: 0; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Live Music Archive · collection:GratefulDead</div>
+    <h1>Grateful Dead <span id="span"></span></h1>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <section class="range" aria-label="Date range">
+    <div class="dates">
+      <label>First date <input type="date" id="from"></label>
+      <label>Last date <input type="date" id="to"></label>
+      <div class="eras" id="eras" role="group" aria-label="Quick ranges"></div>
+    </div>
+    <svg class="hist" id="hist" aria-hidden="true"></svg>
+    <div class="slider">
+      <div class="track"></div><div class="fill" id="fill"></div>
+      <input type="range" id="lo" aria-label="First show in range">
+      <input type="range" id="hi" aria-label="Last show in range">
+    </div>
+    <div class="stepper" role="group" aria-label="Step through shows">
+      <button class="arrow" id="prev" aria-label="Previous show">←</button>
+      <button class="now" id="now" aria-live="polite" title="Play this show"><b id="nowCity"></b><span id="nowDate"></span></button>
+      <button class="arrow" id="next" aria-label="Next show">→</button>
+    </div>
+  </section>
+
+  <div class="mapbox">
+    <svg id="map" viewBox="0 0 975 610" role="img" aria-label="Map of Grateful Dead show locations in the selected range"></svg>
+    <div class="empty" id="empty" hidden>No shows in this range</div>
+    <div class="legend"><span><i></i>City (size = shows in range) · click to list and play its shows</span><span><i class="pk"></i>Current show</span></div>
+    <div class="abroad" id="abroad"></div>
+    <div class="tip" id="tip" hidden></div>
+  </div>
+
+  <section>
+    <div class="listhead">
+      <h2 id="listTitle"></h2>
+      <button class="city-btn" id="clearCity" hidden>Show all cities ✕</button>
+    </div>
+    <div class="list" id="list"></div>
+  </section>
+
+  <footer>
+    Click a date to play its most downloaded recording, streamed from archive.org.
+    One entry per date from the <a href="https://archive.org/details/GratefulDead">Grateful Dead collection</a> in the Live Music Archive; venue and city are the ones most tapers entered for that date.
+    US city locations come from the US Census place gazetteer. Rebuild the data with <code>build_shows.py</code>.
+  </footer>
+</div>
+
+<div class="player" id="player" hidden>
+  <div class="player-in">
+    <div class="player-head">
+      <div class="meta"><b id="pTitle"></b> <span id="pSub"></span></div>
+      <button id="pClose">Close player ✕</button>
+    </div>
+    <audio id="pAudio" controls preload="none"></audio>
+    <ol class="tracks" id="pTracks"></ol>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script>
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const fmt = d => `${MONTHS[+d.slice(5, 7) - 1]} ${+d.slice(8, 10)}, ${d.slice(0, 4)}`;
+const proj = d3.geoAlbersUsa().scale(1300).translate([487.5, 305]);
+const ERAS = [["All", null, null], ["1965–69", "1965", "1969"], ["1970–74", "1970", "1974"], ["1975–79", "1975", "1979"],
+              ["1980–84", "1980", "1984"], ["1985–89", "1985", "1989"], ["1990–95", "1990", "1995"]];
+const PAGE = 300;   // list rows drawn before "show more"
+
+let SHOWS = [], lo = 0, hi = 0, city = null, playing = null, sel = null, limit = PAGE;
+const $ = id => document.getElementById(id);
+
+// ---- player: streams the recording's MP3s from archive.org ----
+const audio = $("pAudio"), trackList = $("pTracks");
+let tracks = [], cur = -1, loadSeq = 0;
+const fileUrl = (id, name) => `https://archive.org/download/${encodeURIComponent(id)}/${name.split("/").map(encodeURIComponent).join("/")}`;
+const mmss = sec => { if (String(sec).includes(":")) return sec; sec = Math.round(+sec || 0); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`; };
+
+function playTrack(i) {
+  if (i < 0 || i >= tracks.length) return;
+  cur = i;
+  audio.src = tracks[i].url;
+  audio.play().catch(() => {});
+  trackList.querySelectorAll("li").forEach((li, j) => li.classList.toggle("cur", j === i));
+  trackList.children[i]?.scrollIntoView({ block: "nearest" });
+}
+audio.addEventListener("ended", () => playTrack(cur + 1));
+
+async function play(s) {
+  playing = s.d;
+  sel = s;
+  renderStepper();
+  const seq = ++loadSeq;
+  $("pTitle").textContent = `${fmt(s.d)} · ${s.v || "Unknown venue"}`;
+  $("pSub").textContent = s.c || "";
+  $("player").hidden = false;
+  document.body.classList.add("has-player");
+  audio.pause();
+  trackList.innerHTML = `<li class="msg">Loading tracks from archive.org…</li>`;
+  renderList();
+  try {
+    const res = await fetch(`https://archive.org/metadata/${encodeURIComponent(s.id)}/files`);
+    const files = (await res.json()).result || [];
+    if (seq !== loadSeq) return;
+    const mp3 = files.filter(f => /\.mp3$/i.test(f.name));
+    const vbr = mp3.filter(f => f.format === "VBR MP3");
+    let set = vbr.length ? vbr : mp3.filter(f => !/_64kb\.mp3$/i.test(f.name));
+    if (!set.length) set = mp3;
+    set.sort((a, b) => (parseInt(a.track) || 0) - (parseInt(b.track) || 0) || a.name.localeCompare(b.name));
+    tracks = set.map(f => ({ title: f.title || f.name.replace(/\.mp3$/i, ""), len: f.length, url: fileUrl(s.id, f.name) }));
+    if (!tracks.length) { trackList.innerHTML = `<li class="msg">No playable MP3s in this recording.</li>`; return; }
+    trackList.innerHTML = "";
+    tracks.forEach((t, i) => {
+      const li = document.createElement("li");
+      li.innerHTML = `<span>${i + 1}</span><div></div><span>${t.len ? mmss(t.len) : ""}</span>`;
+      li.querySelector("div").textContent = t.title;
+      li.onclick = () => playTrack(i);
+      trackList.appendChild(li);
+    });
+    playTrack(0);
+  } catch (e) {
+    if (seq === loadSeq) trackList.innerHTML = `<li class="msg">Couldn't load the tracks from archive.org. Check your connection and click the date again.</li>`;
+  }
+}
+$("pClose").onclick = () => {
+  loadSeq++; audio.pause(); audio.removeAttribute("src"); tracks = []; cur = -1;
+  $("player").hidden = true;
+  document.body.classList.remove("has-player");
+  playing = null; renderList();
+};
+
+// ---- range: lo/hi are indexes into SHOWS (sorted by date), so the slider steps show by show ----
+const inRange = () => SHOWS.slice(lo, hi + 1);
+function setRange(a, b, from) {
+  lo = Math.max(0, Math.min(a, SHOWS.length - 1));
+  hi = Math.max(lo, Math.min(b, SHOWS.length - 1));
+  city = null; limit = PAGE;
+  render(from);
+}
+const firstOnOrAfter = d => { const i = d3.bisectLeft(SHOWS.map(s => s.d), d); return Math.min(i, SHOWS.length - 1); };
+const lastOnOrBefore = d => Math.max(0, d3.bisectRight(SHOWS.map(s => s.d), d) - 1);
+
+function renderRange(from) {
+  const a = SHOWS[lo].d, b = SHOWS[hi].d;
+  if (from !== "date") { $("from").value = a; $("to").value = b; }
+  if (from !== "slider") { $("lo").value = lo; $("hi").value = hi; }
+  const n = SHOWS.length - 1;
+  $("fill").style.left = `${lo / n * 100}%`;
+  $("fill").style.width = `${(hi - lo) / n * 100}%`;
+  $("span").textContent = a.slice(0, 4) === b.slice(0, 4) ? a.slice(0, 4) : `${a.slice(0, 4)}–${b.slice(0, 4)}`;
+  d3.select("#hist").selectAll("rect").classed("in", d => d.y >= +a.slice(0, 4) && d.y <= +b.slice(0, 4));
+  document.querySelectorAll("#eras button").forEach(btn => {
+    const [, y0, y1] = ERAS[+btn.dataset.i];
+    const want = y0 ? [firstOnOrAfter(`${y0}-01-01`), lastOnOrBefore(`${y1}-12-31`)] : [0, SHOWS.length - 1];
+    btn.setAttribute("aria-pressed", want[0] === lo && want[1] === hi);
+  });
+  try { history.replaceState(null, "", `#${a}..${b}`); } catch (e) {}
+}
+
+function buildHistogram() {
+  // shows per year, laid out so each bar sits above the slider positions of that year's shows
+  const n = SHOWS.length - 1;
+  const years = d3.rollups(SHOWS.map((s, i) => ({ y: +s.d.slice(0, 4), i })), v => ({ a: d3.min(v, d => d.i), b: d3.max(v, d => d.i), n: v.length }), d => d.y)
+    .map(([y, v]) => ({ y, ...v }));
+  const svg = d3.select("#hist").attr("viewBox", "0 0 1000 64").attr("preserveAspectRatio", "none");
+  const h = d3.scaleLinear().domain([0, d3.max(years, d => d.n)]).range([0, 48]);
+  svg.selectAll("rect").data(years).join("rect")
+    .attr("x", d => d.a / n * 1000).attr("width", d => Math.max(1, (d.b - d.a + 1) / n * 1000 - 1.5))
+    .attr("y", d => 50 - h(d.n)).attr("height", d => h(d.n))
+    .append("title").text(d => `${d.y}: ${d.n} shows`);
+  // label every fifth year (svg text would stretch with preserveAspectRatio=none, so labels go in a second layer)
+  const labels = d3.select("#hist").node().parentNode;
+  labels.querySelectorAll(".hist-lbl").forEach(e => e.remove());
+  const box = document.createElement("div");
+  box.className = "hist-lbl";
+  box.style.cssText = "position:relative;height:14px;margin-top:-14px;font:10px var(--font-mono);color:var(--muted);pointer-events:none";
+  years.filter(d => d.y % 5 === 0 || d.y === 1965).forEach(d => {
+    const s = document.createElement("span");
+    s.textContent = d.y;
+    s.style.cssText = `position:absolute;left:${d.a / n * 100}%`;
+    box.appendChild(s);
+  });
+  $("hist").after(box);
+}
+
+// ---- map ----
+const svg = d3.select("#map");
+const dotsG = svg.append("g"), lblG = svg.append("g"), pickG = svg.append("g");
+const tip = $("tip");
+const r = d3.scaleSqrt().range([3, 20]);
+
+function renderMap(rows) {
+  const byCity = d3.groups(rows.filter(s => s.xy), s => s.c)
+    .map(([c, ss]) => ({ c, ss, xy: ss[0].xy }))
+    .sort((a, b) => b.ss.length - a.ss.length);
+  r.domain([1, Math.max(4, d3.max(byCity, d => d.ss.length) || 1)]);
+  $("empty").hidden = rows.length > 0;
+  dotsG.selectAll("circle").data(byCity, d => d.c).join("circle")
+    .attr("class", d => "dot" + (d.c === city ? " on" : ""))
+    .attr("cx", d => d.xy[0]).attr("cy", d => d.xy[1]).attr("r", d => r(d.ss.length))
+    .attr("tabindex", 0).attr("role", "button")
+    .attr("aria-label", d => `${d.c}: ${d.ss.length} show${d.ss.length > 1 ? "s" : ""}`)
+    .on("click", (e, d) => pickCity(d.c))
+    .on("keydown", (e, d) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pickCity(d.c); } })
+    .on("mousemove", (e, d) => {
+      const box = e.currentTarget.ownerSVGElement.parentNode.getBoundingClientRect();
+      const first = d.ss[0].d, last = d.ss.at(-1).d;
+      tip.innerHTML = `<b></b><span>${d.ss.length} show${d.ss.length > 1 ? "s" : ""}</span><br><span>${fmt(first)}${first !== last ? " – " + fmt(last) : ""}</span>`;
+      tip.querySelector("b").textContent = d.c;
+      tip.hidden = false;
+      const x = e.clientX - box.left + 14, y = e.clientY - box.top + 14;
+      tip.style.left = `${Math.min(x, box.width - 270)}px`;
+      tip.style.top = `${y}px`;
+    })
+    .on("mouseleave", () => { tip.hidden = true; });
+  // label the busiest cities only
+  lblG.selectAll("text").data(byCity.slice(0, 12), d => d.c).join("text")
+    .attr("class", "lbl").attr("x", d => d.xy[0] + r(d.ss.length) + 3).attr("y", d => d.xy[1] + 4)
+    .text(d => d.c.replace(/, [A-Z]{2}$/, ""));
+
+  const abroad = d3.groups(rows.filter(s => !s.xy && s.c), s => s.c).sort((a, b) => b[1].length - a[1].length);
+  const el = $("abroad");
+  el.innerHTML = abroad.length ? `<span>Outside the US map:</span>` : "";
+  abroad.forEach(([c, ss]) => {
+    const b = document.createElement("button");
+    b.textContent = `${c} · ${ss.length}`;
+    b.dataset.c = c;
+    b.setAttribute("aria-pressed", c === city);
+    b.onclick = () => pickCity(c);
+    el.appendChild(b);
+  });
+}
+
+function pickCity(c) {
+  city = city === c ? null : c;
+  limit = PAGE;
+  render();
+  if (city) $("listTitle").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("clearCity").onclick = () => { city = null; limit = PAGE; render(); };
+
+// ---- list ----
+function renderList() {
+  const rows = inRange().filter(s => !city || s.c === city);
+  $("listTitle").textContent = city ? `${rows.length} show${rows.length === 1 ? "" : "s"} in ${city}` : `${rows.length.toLocaleString()} show dates`;
+  $("clearCity").hidden = !city;
+  const list = $("list");
+  list.innerHTML = "";
+  let year = null;
+  rows.slice(0, limit).forEach(s => {
+    if (s.d.slice(0, 4) !== year) {
+      year = s.d.slice(0, 4);
+      const h = document.createElement("div");
+      h.className = "yr"; h.textContent = year;
+      list.appendChild(h);
+    }
+    const row = document.createElement("div");
+    row.className = "row" + (s.d === playing ? " playing" : "") + (sel && s.d === sel.d ? " sel" : "");
+    row.dataset.d = s.d;
+    row.tabIndex = 0;
+    row.setAttribute("role", "button");
+    row.innerHTML = `<span class="dt">${MONTHS[+s.d.slice(5, 7) - 1]} ${+s.d.slice(8, 10)}</span>
+      <span class="v"><div></div><small></small></span>
+      <a href="https://archive.org/details/${encodeURIComponent(s.id)}" target="_blank" rel="noopener">${s.n} rec</a>`;
+    row.querySelector("div").textContent = s.v || "Unknown venue";
+    row.querySelector("small").textContent = s.c || "Location unknown";
+    row.querySelector("a").onclick = e => e.stopPropagation();
+    row.onclick = () => play(s);
+    row.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); play(s); } };
+    list.appendChild(row);
+  });
+  if (rows.length > limit) {
+    const more = document.createElement("button");
+    more.className = "city-btn more";
+    more.textContent = `Show ${Math.min(PAGE, rows.length - limit)} more of ${(rows.length - limit).toLocaleString()} remaining`;
+    more.onclick = () => { limit += PAGE; renderList(); };
+    list.appendChild(more);
+  }
+}
+
+function renderStats(rows) {
+  const placed = rows.filter(s => s.xy);
+  const cities = new Set(rows.filter(s => s.c).map(s => s.c)).size;
+  const states = new Set(placed.filter(s => s.co === "US").map(s => s.c.slice(-2))).size;
+  const abroad = rows.filter(s => s.c && !s.xy).length;
+  const unknown = rows.filter(s => !s.c).length;
+  $("stats").innerHTML = `<span><b>${rows.length.toLocaleString()}</b> show dates</span><span><b>${cities}</b> cities</span>` +
+    `<span><b>${states}</b> states</span>` + (abroad ? `<span><b>${abroad}</b> abroad</span>` : "") +
+    (unknown ? `<span><b>${unknown}</b> location unknown</span>` : "") +
+    `<span><b>${d3.sum(rows, s => s.n).toLocaleString()}</b> recordings</span>`;
+}
+
+// the shows the stepper walks through: the date range, narrowed to a city if one is picked
+const stepRows = () => inRange().filter(s => !city || s.c === city);
+
+function renderStepper() {
+  const rows = stepRows();
+  if (!sel || !rows.includes(sel)) sel = rows[0] || null;
+  const i = sel ? rows.indexOf(sel) : -1;
+  $("prev").disabled = i <= 0;
+  $("next").disabled = i < 0 || i >= rows.length - 1;
+  $("now").disabled = !sel;
+  $("nowCity").textContent = sel ? (sel.c || "Location unknown") : "No shows in range";
+  $("nowDate").textContent = sel ? `${fmt(sel.d)} · ${sel.v || "Unknown venue"} · ${i + 1} of ${rows.length.toLocaleString()}` : "";
+  // highlight on the map (shows abroad or without a place have no dot)
+  const at = sel && sel.xy ? [sel] : [];
+  const cityN = sel ? inRange().filter(s => s.c === sel.c && s.xy).length : 0;
+  const rad = Math.max(7, r(Math.max(1, cityN)) + 2);
+  pickG.selectAll("circle.pick-halo").data(at).join("circle").attr("class", "pick-halo")
+    .attr("cx", d => d.xy[0]).attr("cy", d => d.xy[1]).attr("r", rad + 6);
+  pickG.selectAll("circle.pick").data(at).join("circle").attr("class", "pick")
+    .attr("cx", d => d.xy[0]).attr("cy", d => d.xy[1]).attr("r", rad);
+  document.querySelectorAll("#abroad button").forEach(b => b.style.boxShadow = sel && !sel.xy && b.dataset.c === sel.c ? "0 0 0 2px var(--pick)" : "");
+  document.querySelectorAll(".row").forEach(row => row.classList.toggle("sel", !!sel && row.dataset.d === sel.d));
+}
+
+function step(dir) {
+  const rows = stepRows();
+  const i = rows.indexOf(sel) + dir;
+  if (i < 0 || i >= rows.length) return;
+  play(rows[i]);
+  const row = document.querySelector(`.row[data-d="${rows[i].d}"]`);
+  if (row && !row.closest(".list").hidden) row.scrollIntoView({ block: "nearest" });
+}
+
+function render(from) {
+  const rows = inRange();
+  renderRange(from);
+  renderStats(rows);
+  renderMap(rows);
+  renderList();
+  renderStepper();
+}
+
+// ---- wiring ----
+function wire() {
+  const n = SHOWS.length - 1;
+  for (const id of ["lo", "hi"]) Object.assign($(id), { min: 0, max: n, step: 1 });
+  $("lo").oninput = () => { const v = +$("lo").value; if (v > hi) $("lo").value = hi; setRange(+$("lo").value, hi, "slider"); };
+  $("hi").oninput = () => { const v = +$("hi").value; if (v < lo) $("hi").value = lo; setRange(lo, +$("hi").value, "slider"); };
+  for (const id of ["from", "to"]) Object.assign($(id), { min: SHOWS[0].d, max: SHOWS[n].d });
+  $("from").onchange = () => { if ($("from").value) setRange(firstOnOrAfter($("from").value), Math.max(hi, firstOnOrAfter($("from").value))); };
+  $("to").onchange = () => { if ($("to").value) setRange(Math.min(lo, lastOnOrBefore($("to").value)), lastOnOrBefore($("to").value)); };
+  $("prev").onclick = () => step(-1);
+  $("next").onclick = () => step(1);
+  $("now").onclick = () => sel && play(sel);
+  document.querySelector(".stepper").onkeydown = e => {
+    if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
+    if (e.key === "ArrowRight") { e.preventDefault(); step(1); }
+  };
+  ERAS.forEach(([label, y0, y1], i) => {
+    const b = document.createElement("button");
+    b.textContent = label; b.dataset.i = i;
+    b.onclick = () => y0 ? setRange(firstOnOrAfter(`${y0}-01-01`), lastOnOrBefore(`${y1}-12-31`)) : setRange(0, n);
+    $("eras").appendChild(b);
+  });
+}
+
+async function init() {
+  $("listTitle").textContent = "Loading shows…";
+  const [data, us] = await Promise.all([
+    fetch("shows.json").then(r => r.json()),
+    fetch("https://cdn.jsdelivr.net/npm/us-atlas@3.0.1/states-10m.json").then(r => r.json()),
+  ]);
+  SHOWS = data.shows;
+  SHOWS.forEach(s => { s.xy = s.lat != null ? proj([s.lon, s.lat]) : null; });
+  const path = d3.geoPath(proj);
+  svg.insert("g", ":first-child").selectAll("path").data(topojson.feature(us, us.objects.states).features)
+    .join("path").attr("class", "state").attr("d", path);
+  svg.insert("path", "g:nth-child(2)").attr("class", "nation").attr("d", path(topojson.mesh(us, us.objects.nation)));
+  wire();
+  buildHistogram();
+  // optional starting range in the URL: #1977-01-01..1977-12-31
+  const m = location.hash.match(/^#(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})$/);
+  if (m) setRange(firstOnOrAfter(m[1]), lastOnOrBefore(m[2]));
+  else setRange(0, SHOWS.length - 1);
+}
+init().catch(() => { $("listTitle").textContent = "Couldn't load the show data. Check your connection and reload."; });
+</script>
