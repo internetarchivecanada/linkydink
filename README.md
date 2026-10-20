@@ -9,6 +9,7 @@ _TODO: one or two sentences on the idea._
 ## Team
 
 - Brewster Kahle (brewster@archive.org)
+- Dan Visel (danvisel@archive.org)
 - _add yourself here_
 
 ## Getting started
