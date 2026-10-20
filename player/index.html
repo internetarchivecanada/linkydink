@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live Music Archive seedlist</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; color: #222; }
+    h1 { font-size: 1.4rem; margin-bottom: .25rem; }
+    .sub { color: #666; margin-top: 0; }
+    audio { width: 100%; margin: 1rem 0; }
+    .controls { display: flex; gap: .5rem; }
+    button { font: inherit; padding: .4rem .9rem; cursor: pointer; }
+    ol { padding-left: 1.5rem; }
+    li { padding: .5rem; border-radius: 6px; cursor: pointer; }
+    li:hover { background: #f2f2f2; }
+    li.playing { background: #e6efff; font-weight: 600; }
+    .meta { display: block; font-weight: normal; color: #666; font-size: .9rem; }
+    .meta a { color: inherit; }
+  </style>
+</head>
+<body>
+  <h1>Live Music Archive seedlist</h1>
+  <p class="sub">Five live recordings from the <a href="https://archive.org/details/etree">Internet Archive's Live Music Archive</a>.</p>
+
+  <div id="now">Pick a song or press Play.</div>
+  <audio id="audio" controls preload="none"></audio>
+  <div class="controls">
+    <button id="prev">⏮ Prev</button>
+    <button id="play">▶ Play</button>
+    <button id="next">Next ⏭</button>
+  </div>
+
+  <ol id="list"></ol>
+
+  <script>
+    const audio = document.getElementById('audio');
+    const list = document.getElementById('list');
+    const now = document.getElementById('now');
+    const playBtn = document.getElementById('play');
+    let tracks = [];
+    let current = -1;
+
+    function load(i) {
+      current = (i + tracks.length) % tracks.length;
+      const t = tracks[current];
+      audio.src = `https://archive.org/download/${t.identifier}/${encodeURIComponent(t.file)}`;
+      now.textContent = `Now playing: ${t.title} by ${t.artist} (${t.date})`;
+      [...list.children].forEach((li, j) => li.classList.toggle('playing', j === current));
+      audio.play();
+    }
+
+    playBtn.onclick = () => {
+      if (current < 0) load(0);
+      else if (audio.paused) audio.play();
+      else audio.pause();
+    };
+    document.getElementById('prev').onclick = () => load(current - 1);
+    document.getElementById('next').onclick = () => load(current + 1);
+    audio.onplay = () => playBtn.textContent = '⏸ Pause';
+    audio.onpause = () => playBtn.textContent = '▶ Play';
+    audio.onended = () => load(current + 1);
+
+    fetch('seedlist.json')
+      .then(r => r.json())
+      .then(data => {
+        tracks = data.tracks;
+        tracks.forEach((t, i) => {
+          const li = document.createElement('li');
+          li.innerHTML = `${t.title} by ${t.artist}
+            <span class="meta">${t.venue}, ${t.date} ·
+            <a href="https://archive.org/details/${t.identifier}" target="_blank">archive.org</a></span>`;
+          li.onclick = e => { if (e.target.tagName !== 'A') load(i); };
+          list.appendChild(li);
+        });
+      });
+  </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+{
+  "name": "Live Music Archive seedlist",
+  "source": "https://archive.org/details/etree",
+  "tracks": [
+    {
+      "title": "Jack Straw",
+      "artist": "Grateful Dead",
+      "date": "1977-05-08",
+      "venue": "Barton Hall - Cornell University",
+      "identifier": "gd1977-05-08.shure57.stevenson.29303.flac16",
+      "file": "gd1977-05-08d01t06.mp3"
+    },
+    {
+      "title": "Better Together",
+      "artist": "Jack Johnson",
+      "date": "2008-06-14",
+      "venue": "Bonnaroo Music Festival",
+      "identifier": "jj2008-06-14.mk4",
+      "file": "jj2008-06-14d1t03.mp3"
+    },
+    {
+      "title": "King's Crossing",
+      "artist": "Elliott Smith",
+      "date": "2003-01-31",
+      "venue": "Henry Fonda Theatre",
+      "identifier": "esmith2003-01-31.flac16",
+      "file": "es2003-01-31d1t01.mp3"
+    },
+    {
+      "title": "Sidewalk Stars",
+      "artist": "Yonder Mountain String Band",
+      "date": "2006-05-09",
+      "venue": "Bart's CD Cellar",
+      "identifier": "ymsb2006-05-09.flac16",
+      "file": "ymsb2006-05-09t02.mp3"
+    },
+    {
+      "title": "King Without A Crown",
+      "artist": "Matisyahu",
+      "date": "2004-12-25",
+      "venue": "BB King's",
+      "identifier": "matisyahu2004-12-25",
+      "file": "matisyahu2004-12-25sbdt05.mp3"
+    }
+  ]
+}
